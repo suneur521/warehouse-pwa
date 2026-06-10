@@ -168,9 +168,11 @@
     </div>
     <!-- 扫码区域 -->
     <div id="scannerContainer" style="display:none;margin-bottom:12px">
-      <div id="scannerVideo" style="width:100%;height:300px;border-radius:10px;overflow:hidden;cursor:pointer" onclick="window._stopScan()"></div>
-      <div style="font-size:12px;color:#888;text-align:center;margin-top:6px">轻点摄像区域可退出扫码</div>
-      <div id="scannerTip" style="font-size:12px;color:#888;text-align:center;margin-top:4px">将条形码对准框内即可自动识别</div>
+      <div id="scannerVideo" style="width:100%;height:300px;min-height:200px;border-radius:10px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center"></div>
+      <div id="scannerTip" style="font-size:12px;color:#888;text-align:center;margin-top:6px">将条形码对准框内即可自动识别</div>
+      <div style="text-align:center;margin-top:4px">
+        <button class="btn btn-outline btn-sm" onclick="window._stopScan()" style="font-size:12px">关闭扫码</button>
+      </div>
     </div>
     <div id="goodsPreview" style="display:none">
       <div class="info-box" id="goodsInfo"></div>
@@ -447,13 +449,36 @@
   let scanEnabled = false;
   let cameraPermissionGranted = false;
   let useNativeScanner = false; // 是否使用原生扫码
+  let scanInitializing = false;  // 防止重复初始化
+
+  // 在扫码区域内显示错误信息
+  function showScanError(msg) {
+    scannerVideo.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#ff4d4f;font-size:14px;text-align:center;padding:20px">${msg}</div>`;
+    scannerTip.textContent = '点击上方扫码按钮重试';
+    scannerRunning = false;
+    scanEnabled = false;
+    scanInitializing = false;
+  }
 
   // 全局退出扫码函数（供onclick调用）
   window._stopScan = function() {
     scanEnabled = false;
+    scanInitializing = false;
     scannerContainer.style.display = 'none';
     if (useNativeScanner) {
       stopNativeScan();
+    } else if (html5QrCode && scannerRunning) {
+      // 彻底停止html5-qrcode，以便下次重新启动
+      html5QrCode.stop().then(() => {
+        scannerRunning = false;
+        scannerVideo.innerHTML = '';
+      }).catch(() => {
+        scannerRunning = false;
+        scannerVideo.innerHTML = '';
+      });
+    } else {
+      scannerRunning = false;
+      scannerVideo.innerHTML = '';
     }
   };
 
@@ -486,11 +511,16 @@
       nativeVideoEl = null;
     }
     scannerRunning = false;
+    scanInitializing = false;
+    scannerVideo.innerHTML = '';
   }
 
   // 原生扫码循环检测
   function nativeScanLoop() {
-    if (!scanEnabled || !nativeDetector || !nativeVideoEl) return;
+    if (!scanEnabled || !nativeDetector || !nativeVideoEl) {
+      nativeScanRAF = null;
+      return;
+    }
     if (nativeVideoEl.readyState >= nativeVideoEl.HAVE_ENOUGH_DATA) {
       nativeDetector.detect(nativeVideoEl).then(barcodes => {
         if (!scanEnabled) return;
@@ -499,73 +529,143 @@
           const code = barcodes[0].rawValue;
           goodsSearch.value = code;
           scannerContainer.style.display = 'none';
+          stopNativeScan();
+          scannerRunning = false;
+          scanInitializing = false;
           showToast('已识别：' + code);
           searchGoods(code);
           return;
         }
-      }).catch(() => {});
-    }
-    if (scanEnabled) {
+        if (scanEnabled) {
+          nativeScanRAF = requestAnimationFrame(nativeScanLoop);
+        }
+      }).catch(() => {
+        if (scanEnabled) {
+          nativeScanRAF = requestAnimationFrame(nativeScanLoop);
+        }
+      });
+    } else if (scanEnabled) {
       nativeScanRAF = requestAnimationFrame(nativeScanLoop);
     }
   }
 
   // 启动原生扫码
   async function startNativeScan() {
-    scannerContainer.style.display = 'block';
     scannerTip.textContent = '正在启动摄像头...';
+    scannerVideo.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#888">正在启动摄像头...</div>';
 
     // 创建video元素
-    scannerVideo.innerHTML = '';
     nativeVideoEl = document.createElement('video');
     nativeVideoEl.setAttribute('playsinline', '');
     nativeVideoEl.setAttribute('autoplay', '');
+    nativeVideoEl.setAttribute('muted', '');
     nativeVideoEl.style.cssText = 'width:100%;height:300px;object-fit:cover;border-radius:10px;';
-    scannerVideo.appendChild(nativeVideoEl);
 
     try {
       nativeStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          facingMode: 'environment'
         }
       });
+      scannerVideo.innerHTML = '';
+      scannerVideo.appendChild(nativeVideoEl);
       nativeVideoEl.srcObject = nativeStream;
       await nativeVideoEl.play();
       scannerRunning = true;
       scanEnabled = true;
       useNativeScanner = true;
+      scanInitializing = false;
       cameraPermissionGranted = true;
       scannerTip.textContent = '将条形码对准框内即可自动识别';
+
+      // 8秒超时：如果原生扫码一直没识别，自动回退到html5-qrcode
+      const nativeStartTime = Date.now();
+      nativeScanLoop = function() {
+        if (!scanEnabled || !nativeDetector || !nativeVideoEl) {
+          nativeScanRAF = null;
+          return;
+        }
+        // 超时回退
+        if (Date.now() - nativeStartTime > 8000) {
+          stopNativeScan();
+          scannerTip.textContent = '切换识别引擎中...';
+          scannerVideo.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#888">切换识别引擎...</div>';
+          startHtml5Scan();
+          return;
+        }
+        if (nativeVideoEl.readyState >= nativeVideoEl.HAVE_ENOUGH_DATA) {
+          nativeDetector.detect(nativeVideoEl).then(barcodes => {
+            if (!scanEnabled) return;
+            if (barcodes.length > 0) {
+              scanEnabled = false;
+              const code = barcodes[0].rawValue;
+              goodsSearch.value = code;
+              scannerContainer.style.display = 'none';
+              stopNativeScan();
+              scannerRunning = false;
+              scanInitializing = false;
+              showToast('已识别：' + code);
+              searchGoods(code);
+              return;
+            }
+            if (scanEnabled) {
+              nativeScanRAF = requestAnimationFrame(nativeScanLoop);
+            }
+          }).catch(() => {
+            if (scanEnabled) {
+              nativeScanRAF = requestAnimationFrame(nativeScanLoop);
+            }
+          });
+        } else if (scanEnabled) {
+          nativeScanRAF = requestAnimationFrame(nativeScanLoop);
+        }
+      };
       nativeScanRAF = requestAnimationFrame(nativeScanLoop);
     } catch (err) {
-      scannerContainer.style.display = 'none';
-      showToast('无法启动摄像头：' + (err.message || err));
+      console.error('原生扫码启动失败:', err);
+      // 原生失败，回退到html5-qrcode
+      scannerTip.textContent = '切换识别引擎中...';
+      startHtml5Scan();
     }
   }
 
   // 启动html5-qrcode扫码（降级方案）
   async function startHtml5Scan() {
-    scannerContainer.style.display = 'block';
     scannerTip.textContent = '正在启动摄像头...';
+    scannerVideo.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#888">正在启动摄像头...</div>';
 
     try {
-      if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode('scannerVideo');
+      // 确保之前的实例已完全释放
+      if (html5QrCode) {
+        try { await html5QrCode.stop(); } catch(e) {}
+        html5QrCode = null;
       }
+      // 等待容器渲染完成
+      await new Promise(r => setTimeout(r, 100));
+      html5QrCode = new Html5Qrcode('scannerVideo');
       scanEnabled = true;
       useNativeScanner = false;
+
+      // 使用 .getCameras() 先获取可用摄像头，再启动
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || cameras.length === 0) {
+        showScanError('未检测到摄像头设备');
+        return;
+      }
+      // 优先使用后置摄像头，找不到就用第一个
+      let cameraId = cameras[0].id;
+      for (const c of cameras) {
+        if (c.label && (c.label.includes('back') || c.label.includes('后置') || c.label.includes('environment'))) {
+          cameraId = c.id;
+          break;
+        }
+      }
+
       await html5QrCode.start(
-        { facingMode: 'environment' },
+        cameraId,
         {
-          fps: 30,
-          qrbox: { width: 220, height: 100 },
-          aspectRatio: 1.5,
-          videoConstraints: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
+          fps: 10,
+          qrbox: { width: 280, height: 80 },
           formatsToSupport: [
             Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.EAN_8,
@@ -580,21 +680,43 @@
           scanEnabled = false;
           goodsSearch.value = decodedText;
           scannerContainer.style.display = 'none';
+          scannerRunning = false;
+          scanInitializing = false;
+          if (html5QrCode) {
+            html5QrCode.stop().catch(() => {});
+          }
           showToast('已识别：' + decodedText);
           searchGoods(decodedText);
         },
         () => {}
       );
       scannerRunning = true;
+      scanInitializing = false;
       cameraPermissionGranted = true;
       scannerTip.textContent = '将条形码对准框内即可自动识别';
     } catch (err) {
-      scannerContainer.style.display = 'none';
-      showToast('无法启动摄像头：' + (err.message || err));
+      console.error('html5-qrcode启动失败:', err);
+      let errMsg = '无法启动摄像头';
+      if (err.message) {
+        if (err.message.includes('NotAllowedError') || err.message.includes('Permission')) {
+          errMsg = '摄像头权限被拒绝，请在浏览器设置中允许访问摄像头';
+        } else if (err.message.includes('NotFoundError')) {
+          errMsg = '未检测到摄像头设备';
+        } else if (err.message.includes('NotReadableError')) {
+          errMsg = '摄像头被其他应用占用，请关闭其他使用摄像头的应用后重试';
+        } else {
+          errMsg = '摄像头启动失败：' + err.message;
+        }
+      }
+      showScanError(errMsg);
     }
   }
 
   scanBtn.addEventListener('click', async () => {
+    // 防止重复点击
+    if (scanInitializing) return;
+
+    // 已经在扫码中，直接显示容器
     if (scannerRunning) {
       scannerContainer.style.display = 'block';
       scanEnabled = true;
@@ -605,17 +727,22 @@
       return;
     }
 
+    // 开始初始化扫码
+    scanInitializing = true;
+    scannerContainer.style.display = 'block';
+    scannerTip.textContent = '正在启动摄像头...';
+    scannerVideo.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#888">正在启动摄像头...</div>';
+
     const permState = await checkCameraPermission();
 
     if (permState === 'denied') {
-      showToast('摄像头权限被禁止，请在浏览器设置中允许访问摄像头');
+      showScanError('摄像头权限已被禁止<br>请在浏览器设置中允许访问摄像头');
       return;
     }
 
     if (permState === 'prompt') {
-      scannerContainer.style.display = 'block';
       scannerTip.innerHTML = '<span style="color:#ff8c00;font-weight:600">弹出权限请求时，请选择"始终允许"，以后扫码将不再询问</span>';
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 500));
     }
 
     // 优先使用原生BarcodeDetector（速度更快）
@@ -1515,6 +1642,43 @@
   // 初始化实时同步（在所有函数定义之后）
   initRealtime();
   cleanExpiredUnloaded();
+
+  // ==================== 提前请求摄像头权限 ====================
+  // 在用户首次交互时提前触发权限请求，之后扫码就不需要再弹窗
+  (function preRequestCamera() {
+    // HTTPS 环境下权限才能持久化
+    if (location.protocol !== 'https:') return;
+
+    let preRequested = false;
+
+    async function tryPreRequest() {
+      if (preRequested) return;
+      const perm = await checkCameraPermission();
+      if (perm === 'granted' || perm === 'denied') return; // 已授权或已拒绝，无需再请求
+      preRequested = true;
+      try {
+        // 临时打开摄像头获取权限，然后立即释放
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        stream.getTracks().forEach(t => t.stop());
+        cameraPermissionGranted = true;
+        console.log('摄像头权限已提前获取');
+      } catch (e) {
+        // 用户拒绝或设备不支持，静默处理
+        console.log('提前获取摄像头权限失败:', e.message);
+      }
+    }
+
+    // 在用户首次触摸/点击页面时触发
+    const events = ['click', 'touchstart'];
+    function onFirstInteraction() {
+      events.forEach(evt => document.removeEventListener(evt, onFirstInteraction, { once: true }));
+      // 延迟一点，避免干扰用户当前操作
+      setTimeout(tryPreRequest, 500);
+    }
+    events.forEach(evt => document.addEventListener(evt, onFirstInteraction, { once: true }));
+  })();
 </script>
 
 </body>
