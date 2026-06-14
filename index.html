@@ -4,11 +4,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="山姆补货">
+  <meta name="apple-mobile-web-app-title" content="补货">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#007AFF">
   <meta name="format-detection" content="telephone=no">
-  <title>山姆补货系统</title>
+  <title>补货系统</title>
   <link rel="manifest" id="manifestLink">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231677ff' width='100' height='100' rx='20'/><text x='50' y='65' text-anchor='middle' fill='white' font-size='50' font-weight='bold'>补</text></svg>">
   <style>
@@ -48,7 +48,7 @@
       letter-spacing:-0.02em;
       border-bottom:0.5px solid var(--ios-sep);
     }
-    .page{display:none;padding:16px 16px 24px;min-height:100%}
+    .page{display:none;padding:4px 16px 24px;min-height:100%}
     .page.active{display:block}
     .tab-bar{
       position:fixed;bottom:0;left:0;right:0;z-index:100;
@@ -56,7 +56,7 @@
       background:#f7f7f7;
       border-top:0.5px solid var(--ios-sep);
     }
-    .tab{flex:1;text-align:center;padding:6px 0 8px;font-size:10px;color:var(--ios-gray);cursor:pointer;transition:color .15s;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:1px;letter-spacing:0}
+    .tab{flex:1;text-align:center;padding:6px 0 8px;font-size:14px;color:var(--ios-gray);cursor:pointer;transition:color .15s;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:1px;letter-spacing:0}
     .tab.active{color:var(--ios-blue);font-weight:600}
     .tab-icon{width:24px;height:24px;line-height:1;display:flex;align-items:center;justify-content:center}
     .tab-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -81,6 +81,7 @@
     .btn-danger{background:var(--ios-red);color:#fff}
     .btn-warning{background:var(--ios-orange);color:#fff}
     .btn-outline{background:transparent;color:var(--ios-blue);border:none}
+    .btn-link{background:transparent;color:var(--ios-blue);border:none;min-width:auto;min-height:auto;padding:8px 4px;font-size:15px;font-weight:400}
     .btn:disabled{background:var(--ios-gray3);color:var(--ios-gray2);cursor:not-allowed;opacity:0.6}
     .btn:disabled:active{transform:none}
     .btn-sm{font-size:13px;padding:5px 12px;min-height:30px;min-width:44px}
@@ -106,7 +107,7 @@
     .perm-create, .perm-list, .perm-driver, .perm-storage { display: none !important; }
     body.role-admin .perm-create, body.role-admin .perm-list, body.role-admin .perm-driver, body.role-admin .perm-storage,
     body.role-replenisher .perm-create, body.role-replenisher .perm-list,
-    body.role-driver .perm-driver { display: revert !important; }
+    body.role-driver .perm-create, body.role-driver .perm-driver { display: revert !important; }
 
     /* 上传区域 */
     body.logged-in:not(.role-admin) .upload-box { display: none !important; }
@@ -137,7 +138,7 @@
     table.data-table{border-collapse:separate;border-spacing:0;font-size:13px}
     .demand-table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px)}
     table.data-table th{
-      background:rgba(0,122,255,0.06);padding:10px 6px;text-align:center;
+      background:#E8F0FE;padding:10px 6px;text-align:center;
       font-weight:600;font-size:12px;color:var(--ios-text2);white-space:nowrap;
       border-bottom:0.5px solid var(--ios-sep);
       position:sticky;top:0;z-index:5;
@@ -271,7 +272,7 @@
 <div class="header" id="pageHeader">
   <button class="btn btn-sm" id="headerBackBtn" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);display:none;padding:4px 10px;font-size:14px;min-width:auto;min-height:auto;background:transparent;border:none;color:var(--ios-blue);font-weight:500">← 返回</button>
   <span id="pageTitle">创建补货</span>
-  <span id="headerUserName" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--ios-text3);display:none"></span>
+  <span id="headerUserName" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:600;color:var(--ios-blue);display:none"></span>
 </div>
 
 <!-- 页面1：创建补货需求 -->
@@ -283,8 +284,8 @@
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="btn btn-primary perm-create" id="searchBtn" style="flex:1">查询</button>
-      <button class="btn btn-outline perm-create" id="scanBtn" style="flex:1">扫码</button>
-      <button class="btn btn-outline" id="gotoListBtn" style="flex:1">补货清单</button>
+      <button class="btn btn-primary perm-create" id="scanBtn" style="flex:1">扫码</button>
+      <button class="btn btn-link perm-create" id="gotoListBtn" style="flex:1;text-decoration:underline">补货清单</button>
     </div>
     <!-- 扫码区域 -->
     <div id="scannerContainer" style="display:none;margin-bottom:12px">
@@ -314,7 +315,7 @@
       </div>
     </div>
     <div id="noGoodsMsg" style="display:none;padding:12px;background:rgba(255,59,48,0.08);color:#FF3B30;border-radius:10px;margin:10px 0;font-size:14px"></div>
-    <button class="btn btn-primary btn-block perm-create" id="submitDemand" style="margin-top:12px;display:none">提交补货需求</button>
+    <button class="btn btn-primary btn-block" id="submitDemand" style="margin-top:12px;display:none">提交补货需求</button>
   </div>
 </div>
 
@@ -326,7 +327,7 @@
     <input type="text" id="demandSearchInput" placeholder="输入商品号" autocomplete="off" style="flex:1;height:40px;font-size:16px">
     <button class="btn btn-primary perm-list" id="demandSearchBtn" style="white-space:nowrap;min-width:60px">搜索</button>
   </div>
-  <div id="demandBatchBar" class="perm-list" style="display:none;align-items:center;gap:8px;padding:0 0 8px">
+  <div id="demandBatchBar" style="display:none">
     <label style="white-space:nowrap;font-size:14px;display:flex;align-items:center;gap:4px">
       <input type="checkbox" id="selectAllDemand"> 全选
     </label>
@@ -452,7 +453,12 @@
 
   <div class="group-card" id="approvalPanel" style="display:none">
     <div class="section-title" style="margin-top:0">待审批用户</div>
-    <div id="approvalList"></div>
+    <div id="approvalList" style="max-height:200px;overflow-y:auto"></div>
+  </div>
+
+  <div class="group-card" id="userMgmtPanel" style="display:none">
+    <div class="section-title" style="margin-top:0">本店用户管理</div>
+    <div id="userMgmtList" style="max-height:200px;overflow-y:auto"></div>
   </div>
 </div>
 
@@ -584,7 +590,7 @@
       });
 
       realtimeChannel.on('postgres_changes',
-        { event: '*', schema: 'public', table: 'replenish_demand' },
+        { event: '*', schema: 'public', table: 'replenish_demand', filter: 'store_no=eq.' + getCurrentUser().store_no },
         (payload) => handleRealtimeChange(payload)
       );
 
@@ -593,7 +599,6 @@
           realtimeSubscribed = true;
           realtimeRetryCount = 0;
           console.log('Realtime 已连接');
-          showStatusBar('online', '实时同步已连接');
         } else if (status === 'CHANNEL_ERROR') {
           realtimeSubscribed = false;
           console.error('Realtime 通道错误');
@@ -730,17 +735,9 @@
 
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
       const pageName = tab.dataset.page;
-      currentPageName = pageName;
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById('page-' + pageName).classList.add('active');
-      pageTitleEl.textContent = pageTitles[pageName] || '';
-      headerBackBtn.style.display = (pageName === 'list') ? 'block' : 'none';
-      localStorage.setItem('currentPage', pageName);
+      switchToPage(pageName);
       if (pageName === 'driver') loadDriverView();
-      if (pageName === 'login') checkLoginStatus();
     });
   });
 
@@ -1126,6 +1123,7 @@
 
     const { data, error } = await supabase.from('storage_location')
       .select('*')
+      .eq('store_no', getCurrentUser().store_no)
       .eq('goods_code', code);
 
     if (error) {
@@ -1144,6 +1142,7 @@
     const { data: existingDemands } = await supabase.from('replenish_demand')
       .select('shelf_code,pallet_code')
       .eq('goods_code', code)
+      .eq('store_no', getCurrentUser().store_no)
       .eq('status', 'pending');
 
     const usedPallets = new Set();
@@ -1169,7 +1168,7 @@
     window._currentStorageData = filteredData;
     renderGoodsInfo(filteredData);
     renderShelfCheckboxes(filteredData);
-    submitDemandBtn.style.display = 'block';
+    submitDemandBtn.style.display = hasPermission('create') ? 'block' : 'none';
   }
 
   function resetGoodsForm() {
@@ -1273,7 +1272,7 @@
         (r.shelf_code || '未知') === shelfCode && (r.pallet_code || '未知') === palletCode
       );
       records.push({
-        store_no: first.store_no || '',
+        store_no: getCurrentUser().store_no,
         category: first.category || '',
         goods_code: first.goods_code || '',
         goods_name: first.goods_name || '',
@@ -1340,6 +1339,7 @@
 
     const { data, error } = await supabase.from('replenish_demand')
       .select('*')
+      .eq('store_no', getCurrentUser().store_no)
       .eq('status', 'pending')
       .order('category')
       .order('goods_name');
@@ -1389,7 +1389,11 @@
       return;
     }
 
-    batchBar.style.display = 'flex';
+    if (!hasPermission('list')) {
+      batchBar.style.display = 'none';
+    } else {
+      batchBar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:0 0 8px;flex-wrap:nowrap';
+    }
     document.getElementById('selectAllDemand').checked = false;
     updateSelectedCount();
 
@@ -1445,7 +1449,7 @@
         e.target.disabled = true;
         e.target.textContent = '...';
         notifyLocalAction();
-        const { error } = await supabase.from('replenish_demand').delete().eq('id', id);
+        const { error } = await supabase.from('replenish_demand').delete().eq('id', id).eq('store_no', getCurrentUser().store_no);
         if (error) {
           showToast('删除失败：' + error.message);
           e.target.disabled = false;
@@ -1482,7 +1486,7 @@
     btn.disabled = true;
     btn.textContent = '删除中...';
     notifyLocalAction();
-    const { error } = await supabase.from('replenish_demand').delete().in('id', checkedIds);
+    const { error } = await supabase.from('replenish_demand').delete().in('id', checkedIds).eq('store_no', getCurrentUser().store_no);
     if (error) {
       showToast('批量删除失败：' + error.message);
       btn.disabled = false;
@@ -1534,8 +1538,8 @@
       if (sc.toUpperCase().startsWith('3F')) count3F++;
       else if (sc.toUpperCase().startsWith('2F')) count2F++;
     });
-    html += `<span class="dept-tab${currentDriverZone === 'route-3f' ? ' active' : ''}" data-zone="route-3f">总线路(三楼)(${count3F})</span>`;
-    html += `<span class="dept-tab${currentDriverZone === 'route-2f' ? ' active' : ''}" data-zone="route-2f">总线路(二楼)(${count2F})</span>`;
+    html += `<span class="dept-tab${currentDriverZone === 'route-3f' ? ' active' : ''}" data-zone="route-3f">三楼(${count3F})</span>`;
+    html += `<span class="dept-tab${currentDriverZone === 'route-2f' ? ' active' : ''}" data-zone="route-2f">二楼(${count2F})</span>`;
     html += `<span class="dept-tab${currentDriverZone === 'route-1' ? ' active' : ''}" data-zone="route-1">线路一(家居五金)(${route1Count})</span>`;
     html += `<span class="dept-tab${currentDriverZone === 'route-2' ? ' active' : ''}" data-zone="route-2">线路二(电器干货)(${route2Count})</span>`;
     html += `<span class="dept-tab${currentDriverZone === '已下货' ? ' active' : ''}" data-zone="已下货">已下货(${allUnloadedData.length})</span>`;
@@ -1605,7 +1609,7 @@
         let chCount = 0;
         chData.shelves.forEach(items => chCount += items.length);
         html += `<div class="group-card" data-channel="${escHtml(ch)}" style="margin-bottom:10px">
-          <div class="group-title" style="background:rgba(0,122,255,0.06);border-radius:6px;padding:8px 10px;cursor:pointer;position:sticky;top:86px;z-index:10" onclick="const ct=this.nextElementSibling;ct.style.display=ct.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=ct.style.display==='none'?'▶':'▼'">通道 ${escHtml(ch)}（${chCount}个卡板）<span class="arrow" style="float:right">▶</span></div>
+          <div class="group-title" style="background:#E8F0FE;border-radius:6px;padding:8px 10px;cursor:pointer;position:sticky;top:86px;z-index:10" onclick="const ct=this.nextElementSibling;ct.style.display=ct.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=ct.style.display==='none'?'▶':'▼'">通道 ${escHtml(ch)}（${chCount}个卡板）<span class="arrow" style="float:right">▶</span></div>
           <div style="display:none">`;
         // 通道内货架按 route_order 升序，同序先左后右
         const sortedShelves = [...chData.shelves.keys()].sort((a, b) => {
@@ -1650,7 +1654,7 @@
         let chCount = 0;
         shelfMap.forEach(items => chCount += items.length);
         html += `<div class="group-card" data-channel="${escHtml(ch)}" style="margin-bottom:10px">
-          <div class="group-title" style="background:rgba(0,122,255,0.06);border-radius:6px;padding:8px 10px;cursor:pointer;position:sticky;top:86px;z-index:10" onclick="const ct=this.nextElementSibling;ct.style.display=ct.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=ct.style.display==='none'?'▶':'▼'">货架 ${escHtml(ch)}（${chCount}个卡板）<span class="arrow" style="float:right">▶</span></div>
+          <div class="group-title" style="background:#E8F0FE;border-radius:6px;padding:8px 10px;cursor:pointer;position:sticky;top:86px;z-index:10" onclick="const ct=this.nextElementSibling;ct.style.display=ct.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=ct.style.display==='none'?'▶':'▼'">货架 ${escHtml(ch)}（${chCount}个卡板）<span class="arrow" style="float:right">▶</span></div>
           <div style="display:none">`;
 
         const sortedShelves = [...shelfMap.keys()].sort();
@@ -1683,7 +1687,7 @@
         e.target.disabled = true;
         e.target.textContent = '处理中...';
         notifyLocalAction();
-        const { error } = await supabase.from('replenish_demand').update({ status: 'unloaded', unloaded_at: new Date().toISOString() }).eq('id', id);
+        const { error } = await supabase.from('replenish_demand').update({ status: 'unloaded', unloaded_at: new Date().toISOString() }).eq('id', id).eq('store_no', getCurrentUser().store_no);
         if (error) {
           showToast('操作失败：' + error.message);
           e.target.disabled = false;
@@ -1765,9 +1769,9 @@
 
     // 同时加载待下货、已下货和路线数据
     const [pendingRes, unloadedRes, routesRes] = await Promise.all([
-      supabase.from('replenish_demand').select('*').eq('status', 'pending').order('shelf_code'),
-      supabase.from('replenish_demand').select('*').eq('status', 'unloaded').order('shelf_code'),
-      supabase.from('shelf_routes').select('*')
+      supabase.from('replenish_demand').select('*').eq('store_no', getCurrentUser().store_no).eq('status', 'pending').order('shelf_code'),
+      supabase.from('replenish_demand').select('*').eq('store_no', getCurrentUser().store_no).eq('status', 'unloaded').order('shelf_code'),
+      supabase.from('shelf_routes').select('*').eq('store_no', getCurrentUser().store_no)
     ]);
 
     if (pendingRes.error) {
@@ -1814,7 +1818,7 @@
       return;
     }
 
-    let unloadedHtml = `<div style="text-align:right;margin-bottom:8px"><button class="btn btn-danger btn-sm" id="clearUnloadedBtn">清空已下货</button></div>`;
+    let unloadedHtml = `<div style="text-align:right;margin-bottom:8px"><button class="btn btn-danger btn-sm perm-driver" id="clearUnloadedBtn">清空已下货</button></div>`;
 
     let data = allUnloadedData;
     // 二级分组：货架 → 货架号
@@ -1833,7 +1837,7 @@
       const innerMap = shelfMap.get(shelf);
       const totalCount = [...innerMap.values()].reduce((s, a) => s + a.length, 0);
       unloadedHtml += `<div class="group-card" data-shelf="${escHtml(shelf)}" style="margin-bottom:10px">
-        <div class="group-title" style="background:rgba(52,199,89,0.06);border-radius:6px;padding:8px 10px;cursor:pointer;position:sticky;top:86px;z-index:10" onclick="const ct=this.nextElementSibling;ct.style.display=ct.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=ct.style.display==='none'?'▶':'▼'">货架 ${escHtml(shelf)}（${totalCount}个卡板）<span class="arrow" style="float:right">▶</span></div>
+        <div class="group-title" style="background:#E8F0FE;border-radius:6px;padding:8px 10px;cursor:pointer;position:sticky;top:86px;z-index:10" onclick="const ct=this.nextElementSibling;ct.style.display=ct.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=ct.style.display==='none'?'▶':'▼'">货架 ${escHtml(shelf)}（${totalCount}个卡板）<span class="arrow" style="float:right">▶</span></div>
         <div style="display:none">`;
       const sortedCodes = [...innerMap.keys()].sort();
       for (const sc of sortedCodes) {
@@ -1865,7 +1869,7 @@
         e.target.disabled = true;
         e.target.textContent = '恢复中...';
         notifyLocalAction();
-        const { error } = await supabase.from('replenish_demand').update({ status: 'pending' }).eq('id', id);
+        const { error } = await supabase.from('replenish_demand').update({ status: 'pending' }).eq('id', id).eq('store_no', getCurrentUser().store_no);
         if (error) {
           showToast('恢复失败：' + error.message);
           e.target.disabled = false;
@@ -1921,7 +1925,7 @@
       btn.textContent = '清空中...';
       notifyLocalAction();
       const ids = allUnloadedData.map(r => r.id);
-      const { error } = await supabase.from('replenish_demand').delete().in('id', ids);
+      const { error } = await supabase.from('replenish_demand').delete().in('id', ids).eq('store_no', getCurrentUser().store_no);
       if (error) {
         showToast('清空失败：' + error.message);
         btn.disabled = false;
@@ -2022,7 +2026,7 @@
       updateProgress(40, '清除旧数据中...（已剔除 ' + skipped + ' 条无卡板记录）');
 
       // 删除旧数据
-      const { error: delErr } = await supabase.from('storage_location').delete().neq('id', 0);
+      const { error: delErr } = await supabase.from('storage_location').delete().neq('id', 0).eq('store_no', getCurrentUser().store_no);
       if (delErr) console.warn('清表警告:', delErr.message);
 
       updateProgress(50, '上传新数据中...');
@@ -2158,7 +2162,7 @@
       routeUpdateProgress(40, '清除旧数据中...');
 
       // 删除旧数据
-      const { error: delErr } = await supabase.from('shelf_routes').delete().neq('id', 0);
+      const { error: delErr } = await supabase.from('shelf_routes').delete().neq('id', 0).eq('store_no', getCurrentUser().store_no);
       if (delErr) console.warn('清表警告:', delErr.message);
 
       routeUpdateProgress(50, '上传新数据中...');
@@ -2208,6 +2212,15 @@
     if (targetPage) targetPage.classList.add('active');
     pageTitleEl.textContent = pageTitles[pageName] || '';
     headerBackBtn.style.display = (pageName === 'list') ? 'block' : 'none';
+    // 非登录页显示店号：姓名（加大加亮）
+    const user = getCurrentUser();
+    const userNameEl = document.getElementById('headerUserName');
+    if (pageName !== 'login' && user) {
+      userNameEl.textContent = user.store_no + '：' + user.name;
+      userNameEl.style.display = '';
+    } else if (pageName === 'login') {
+      userNameEl.style.display = 'none';
+    }
     localStorage.setItem('currentPage', pageName);
   }
 
@@ -2244,13 +2257,14 @@
 
   // 权限检查
   // 补货员: 创建补货、补货清单可操作；司机下货、数据上传只读
-  // 叉车司机: 司机下货可操作；创建补货、补货清单、数据上传只读
+  // 叉车司机: 创建补货、司机下货可操作；补货清单、数据上传只读
   // 管理员: 全部可操作 + 审批
   function hasPermission(action) {
     const user = getCurrentUser();
     if (!user) return false;
     if (user.role === '管理员') return true;
-    if (action === 'create' || action === 'list') return user.role === '补货员';
+    if (action === 'create') return user.role === '补货员' || user.role === '叉车司机';
+    if (action === 'list') return user.role === '补货员';
     if (action === 'driver') return user.role === '叉车司机';
     if (action === 'storage') return false; // 仅管理员
     if (action === 'approve') return false;
@@ -2269,22 +2283,23 @@
   function checkLoginStatus() {
     const user = getCurrentUser();
     const approvalPanel = document.getElementById('approvalPanel');
+    const userMgmtPanel = document.getElementById('userMgmtPanel');
     const tabBar = document.getElementById('tabBar');
     if (user) {
       loginFormCard.style.display = 'none';
       registerFormCard.style.display = 'none';
       userInfoCard.style.display = 'block';
-      pageTitleEl.textContent = '用户信息';
+      if (currentPageName === 'login') pageTitleEl.textContent = user.role;
       document.getElementById('infoEmpId').textContent = user.emp_id;
       document.getElementById('infoName').textContent = user.name;
       document.getElementById('infoStore').textContent = user.store_no;
       document.getElementById('infoRole').textContent = user.role;
-      document.getElementById('headerUserName').textContent = user.name;
-      document.getElementById('headerUserName').style.display = '';
+      document.getElementById('headerUserName').style.display = (currentPageName === 'login') ? 'none' : ''; // 登录页隐藏，其他页显示
       tabBar.style.display = '';
       if (user.role === '管理员' && approvalPanel) {
         approvalPanel.style.display = 'block';
         loadPendingUsers();
+        if (userMgmtPanel) { userMgmtPanel.style.display = 'block'; loadManagedUsers(); }
       }
     } else {
       loginFormCard.style.display = 'block';
@@ -2293,6 +2308,7 @@
       pageTitleEl.textContent = '登录';
       document.getElementById('headerUserName').style.display = 'none';
       if (approvalPanel) approvalPanel.style.display = 'none';
+      if (userMgmtPanel) userMgmtPanel.style.display = 'none';
       // 隐藏底部导航，只显示登录页面
       tabBar.style.display = 'none';
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2359,7 +2375,7 @@
         return;
       }
 
-      const user = { emp_id: data.emp_id, name: data.name, store_no: data.store_no, role: data.role };
+      const user = { emp_id: data.emp_id, name: data.name, store_no: data.store_no, role: data.role, id: data.id };
       localStorage.setItem('currentUser', JSON.stringify(user));
       checkLoginStatus();
       switchToPage('create');
@@ -2503,7 +2519,10 @@
           const { error } = await supabase.from('users').update({ status: 'approved' }).eq('id', id);
           if (error) { showToast('操作失败'); return; }
           showToast('已通过审批');
-          loadPendingUsers();
+          const mgmtPanel = document.getElementById('userMgmtPanel');
+          if (mgmtPanel) mgmtPanel.style.display = 'block';
+          await loadPendingUsers();
+          await loadManagedUsers();
         });
       });
       listEl.querySelectorAll('[data-reject]').forEach(btn => {
@@ -2513,6 +2532,50 @@
           if (error) { showToast('操作失败'); return; }
           showToast('已拒绝');
           loadPendingUsers();
+        });
+      });
+    } catch (e) {
+      listEl.innerHTML = '<div style="color:var(--ios-red);text-align:center;padding:12px">加载失败</div>';
+    }
+  }
+
+  // 加载本店可管理用户（补货员和叉车司机）
+  async function loadManagedUsers() {
+    const listEl = document.getElementById('userMgmtList');
+    if (!listEl) return;
+    try {
+      const user = getCurrentUser();
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('store_no', user.store_no)
+        .eq('status', 'approved')
+        .neq('id', user.id);
+
+      if (error) { listEl.innerHTML = '<div style="color:var(--ios-text3);text-align:center;padding:12px">加载失败</div>'; return; }
+      if (!data || data.length === 0) {
+        listEl.innerHTML = '<div style="color:var(--ios-text3);text-align:center;padding:12px">暂无本店用户</div>';
+        return;
+      }
+      listEl.innerHTML = data.map(u => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--ios-sep);font-size:13px">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:500;color:var(--ios-text)">${escHtml(u.name)} (${escHtml(u.emp_id)})</div>
+            <div style="color:var(--ios-text3);font-size:12px">${escHtml(u.role)}</div>
+          </div>
+          <button class="btn btn-sm" style="background:var(--ios-red);color:#fff;padding:4px 12px;min-width:auto;min-height:auto;font-size:13px" data-delete="${u.id}">删除</button>
+        </div>
+      `).join('');
+
+      listEl.querySelectorAll('[data-delete]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.delete;
+          const ok = await showModal('确认删除', '确定要删除该用户吗？此操作不可撤销。');
+          if (!ok) return;
+          const { error } = await supabase.from('users').delete().eq('id', id);
+          if (error) { showToast('删除失败'); return; }
+          showToast('已删除');
+          loadManagedUsers();
         });
       });
     } catch (e) {
