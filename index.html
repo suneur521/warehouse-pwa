@@ -1,0 +1,3182 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="补货">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#007AFF">
+  <meta name="format-detection" content="telephone=no">
+  <title>补货系统</title>
+  <link rel="manifest" id="manifestLink">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231677ff' width='100' height='100' rx='20'/><text x='50' y='65' text-anchor='middle' fill='white' font-size='50' font-weight='bold'>补</text></svg>">
+  <style>
+    :root {
+      --ios-blue: #007AFF;
+      --ios-green: #34C759;
+      --ios-red: #FF3B30;
+      --ios-orange: #FF9500;
+      --ios-gray: #8E8E93;
+      --ios-gray2: #AEAEB2;
+      --ios-gray3: #C7C7CC;
+      --ios-gray4: #D1D1D6;
+      --ios-gray5: #E5E5EA;
+      --ios-gray6: #F2F2F7;
+      --ios-bg: #f2f2f7;
+      --ios-card: #ffffff;
+      --ios-sep: rgba(60,60,67,0.12);
+      --ios-text: #1c1c1e;
+      --ios-text2: #3c3c43;
+      --ios-text3: var(--ios-gray); /* #8E8E93 与 --ios-gray 相同 */
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+      background:var(--ios-bg);
+      padding:env(safe-area-inset-top,0) 0 calc(84px + env(safe-area-inset-bottom,0)) 0;
+      user-select:none;-webkit-user-select:none;
+      color:var(--ios-text);
+    }
+    .header{
+      background:#f7f7f7;
+      color:var(--ios-text);
+      padding:12px 16px calc(12px + env(safe-area-inset-top,0));
+      text-align:center;font-size:17px;font-weight:600;
+      position:sticky;top:0;z-index:100;
+      letter-spacing:-0.02em;
+      border-bottom:0.5px solid var(--ios-sep);
+    }
+    .page{display:none;padding:4px 16px 24px;min-height:100%}
+    .page.active{display:block}
+    .tab-bar{
+      position:fixed;bottom:0;left:0;right:0;z-index:100;
+      display:flex;padding-bottom:env(safe-area-inset-bottom,0);
+      background:#f7f7f7;
+      border-top:0.5px solid var(--ios-sep);
+    }
+    .tab{flex:1;text-align:center;padding:6px 0 8px;font-size:14px;color:var(--ios-gray);cursor:pointer;transition:color .15s;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:1px;letter-spacing:0}
+    .tab.active{color:var(--ios-blue);font-weight:600}
+    .tab-icon{width:24px;height:24px;line-height:1;display:flex;align-items:center;justify-content:center}
+    .tab-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .group-card{
+      background:var(--ios-card);border-radius:12px;margin-bottom:12px;padding:14px 16px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    }
+    .group-title{font-size:15px;font-weight:600;color:var(--ios-text);margin-bottom:8px;padding-bottom:8px;border-bottom:0.5px solid var(--ios-sep);letter-spacing:-0.01em}
+    .task-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--ios-sep)}
+    .task-item:last-child{border-bottom:none}
+    .task-info{flex:1;min-width:0}
+    .task-name{font-weight:500;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .task-detail{font-size:12px;color:var(--ios-text3);margin-top:2px}
+    .btn{
+      font-size:15px;padding:9px 18px;border:none;border-radius:10px;cursor:pointer;
+      font-weight:500;white-space:nowrap;transition:opacity .15s,transform .1s;
+      min-height:38px;min-width:60px;letter-spacing:-0.01em;
+    }
+    .btn:active{opacity:0.65;transform:scale(0.97)}
+    .btn-primary{background:var(--ios-blue);color:#fff}
+    .btn-success{background:var(--ios-green);color:#fff}
+    .btn-danger{background:var(--ios-red);color:#fff}
+    .btn-warning{background:var(--ios-orange);color:#fff}
+    .btn-outline{background:transparent;color:var(--ios-blue);border:none}
+    .btn-link{background:transparent;color:var(--ios-blue);border:none;min-width:auto;min-height:auto;padding:8px 4px;font-size:15px;font-weight:400}
+    .btn:disabled{background:var(--ios-gray3);color:var(--ios-gray2);cursor:not-allowed;opacity:0.6}
+    .btn:disabled:active{transform:none}
+    .btn-sm{font-size:13px;padding:5px 12px;min-height:30px;min-width:44px}
+    .btn-block{width:100%}
+    .form-group{margin-bottom:12px}
+    .form-group label{display:block;font-size:13px;margin-bottom:4px;font-weight:500;color:var(--ios-text3);text-transform:uppercase;letter-spacing:0.04em}
+    .form-group input{
+      width:100%;padding:10px 14px;border:0.5px solid var(--ios-sep);border-radius:10px;
+      font-size:16px;transition:border-color .2s,box-shadow .2s;
+      background:var(--ios-gray6);
+    }
+    .form-group input:focus{outline:none;border-color:var(--ios-blue);box-shadow:0 0 0 3px rgba(0,122,255,0.12);background:#fff}
+    .form-group select{
+      width:100%;padding:10px 14px;border:0.5px solid var(--ios-sep);border-radius:10px;
+      font-size:16px;transition:border-color .2s,box-shadow .2s;
+      background:var(--ios-gray6);appearance:none;-webkit-appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;
+    }
+    .form-group select:focus{outline:none;border-color:var(--ios-blue);box-shadow:0 0 0 3px rgba(0,122,255,0.12);background:#fff}
+
+    /* 权限控制：默认隐藏，有权限时恢复原始display */
+    .perm-create, .perm-list, .perm-driver, .perm-storage { display: none !important; }
+    body.role-admin .perm-create, body.role-admin .perm-list, body.role-admin .perm-driver, body.role-admin .perm-storage,
+    body.role-replenisher .perm-create, body.role-replenisher .perm-list,
+    body.role-driver .perm-create, body.role-driver .perm-driver { display: revert !important; }
+
+    /* 上传区域 */
+    body.logged-in:not(.role-admin) .upload-box { display: none !important; }
+    body.logged-in:not(.role-admin) .perm-upload-tip { display: block !important; }
+    .perm-upload-tip { display: none; text-align: center; padding: 28px 16px; color: var(--ios-text3); font-size: 14px; }
+
+    .empty{text-align:center;color:var(--ios-gray3);padding:60px 20px;font-size:15px}
+    .empty::before{content:'';display:block;width:64px;height:64px;margin:0 auto 20px;background:var(--ios-gray5);border-radius:50%}
+    .info-box{margin:10px 0;padding:14px;background:rgba(0,122,255,0.06);border-radius:10px;font-size:13px}
+    .info-row{display:flex;padding:3px 0;align-items:center;gap:4px}
+    .info-row span:first-child{color:var(--ios-text3);font-size:13px;white-space:nowrap}
+    .info-row span:last-child{font-weight:500;font-size:14px;color:var(--ios-text)}
+    .checkbox-group{margin:6px 0}
+    .checkbox-group label.checkbox-label{
+      display:flex;align-items:center;padding:10px 14px;margin:4px 0;
+      background:var(--ios-card);border-radius:10px;cursor:pointer;font-weight:normal;
+      font-size:14px;transition:background .15s;min-height:44px;
+      border:0.5px solid var(--ios-sep);
+    }
+    .checkbox-group label.checkbox-label:active{background:rgba(0,122,255,0.06)}
+    .checkbox-group label.checkbox-label.auto-selected{
+      background:rgba(52,199,89,0.08);
+      border-color:rgba(52,199,89,0.25);
+    }
+    .checkbox-group input[type="checkbox"]{width:20px;height:20px;margin-right:10px;accent-color:var(--ios-blue);flex-shrink:0}
+    .pallet-sub{margin-left:16px;border-left:3px solid var(--ios-blue);padding-left:12px}
+    .pallet-sub .checkbox-label{background:var(--ios-bg);font-size:13px}
+    table.data-table{border-collapse:separate;border-spacing:0;font-size:13px}
+    .demand-table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px)}
+    table.data-table th{
+      background:#E8F0FE;padding:10px 6px;text-align:center;
+      font-weight:600;font-size:12px;color:var(--ios-text2);white-space:nowrap;
+      border-bottom:0.5px solid var(--ios-sep);
+      position:sticky;top:0;z-index:5;
+    }
+    table.data-table td{padding:10px 6px;border-bottom:0.5px solid var(--ios-sep);vertical-align:middle;font-size:13px;white-space:nowrap}
+    table.data-table tr:active{background:rgba(0,122,255,0.04)}
+    .btn-group{display:flex;gap:6px;flex-wrap:nowrap}
+    .section-title{
+      font-size:15px;font-weight:600;color:var(--ios-text);margin:16px 0 8px;
+      padding-bottom:8px;letter-spacing:-0.01em;
+    }
+    .pager-info{font-size:13px;color:var(--ios-text3);text-align:center;padding:16px 0}
+    .dept-nav{
+      display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:4px;
+      padding:8px 12px;flex-shrink:0;
+    }
+    .dept-tab{
+      padding:6px 14px;font-size:13px;color:var(--ios-text2);cursor:pointer;
+      white-space:nowrap;border-radius:18px;transition:all .15s;font-weight:500;
+      background:rgba(118,118,128,0.12);
+    }
+    .dept-tab.active{
+      background:var(--ios-blue);color:#fff;font-weight:600;
+    }
+    .loading-text{text-align:center;color:var(--ios-text3);padding:60px 20px;font-size:14px}
+    .loading-text::after{content:'';display:inline-block;width:16px;height:16px;border:2px solid var(--ios-gray4);border-top-color:var(--ios-blue);border-radius:50%;animation:spin .7s linear infinite;margin-left:8px;vertical-align:middle}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .status-bar{
+      position:fixed;top:0;left:0;right:0;z-index:200;text-align:center;
+      padding:8px 16px;font-size:13px;font-weight:500;transition:transform .3s;
+      transform:translateY(-100%);
+    }
+    .status-bar.show{transform:translateY(0)}
+    .status-bar.offline{background:var(--ios-red);color:#fff}
+    .status-bar.online{background:var(--ios-green);color:#fff}
+    .toast{
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);
+      background:rgba(28,28,30,0.88);color:#fff;padding:10px 24px;border-radius:20px;
+      font-size:14px;z-index:300;pointer-events:none;opacity:0;transition:all .25s;
+    }
+    .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    .upload-box{
+      border:1.5px dashed var(--ios-gray4);border-radius:12px;padding:28px 16px;
+      text-align:center;transition:border-color .2s,background .2s;
+      background:rgba(118,118,128,0.04);
+    }
+    .upload-box:active,.upload-box.drag-over{border-color:var(--ios-blue);background:rgba(0,122,255,0.06)}
+    .progress-bar{background:var(--ios-gray5);border-radius:3px;height:4px;overflow:hidden;margin-top:10px}
+    .progress-fill{background:var(--ios-blue);height:4px;border-radius:3px;transition:width .3s;width:0%}
+    .progress-text{font-size:12px;color:var(--ios-text3);margin-top:5px;text-align:center}
+    .modal-overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:400;
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;transition:opacity .25s;
+    }
+    .modal-overlay.show{opacity:1;pointer-events:auto}
+    .modal{
+      background:#fff;border-radius:14px;padding:24px 20px;
+      width:calc(100% - 56px);max-width:300px;text-align:center;
+      box-shadow:0 8px 30px rgba(0,0,0,0.12);
+    }
+    .modal h4{font-size:17px;margin-bottom:6px;color:var(--ios-text);font-weight:600}
+    .modal p{font-size:13px;color:var(--ios-text3);margin-bottom:20px}
+    .modal .btn{margin:0 4px;min-width:80px}
+    .modal .prompt-input{
+      width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:16px;
+      border:1px solid var(--ios-sep);border-radius:10px;font-size:15px;
+      background:var(--ios-bg);color:var(--ios-text);outline:none;
+    }
+    .modal .prompt-input:focus{border-color:var(--ios-blue)}
+
+    /* 货架号标签 */
+    .shelf-label{
+      font-size:12px;color:var(--ios-orange);font-weight:500;
+      margin-bottom:4px;padding:2px 8px;display:inline-block;
+      background:rgba(255,149,0,0.08);border-radius:6px;
+    }
+
+    /* driver 二级分组微调 */
+    #driverContainer .shelf-group{margin-left:0;padding-left:0;margin-bottom:6px}
+    #driverContainer .shelf-group .shelf-label{display:inline-block;margin-bottom:6px;font-size:13px}
+
+    /* 搜索框圆角 */
+    #demandSearchInput,#goodsSearch{
+      border-radius:10px;border:0.5px solid var(--ios-sep);
+      background:var(--ios-gray6);padding:10px 14px;font-size:16px;
+    }
+    #demandSearchInput:focus,#goodsSearch:focus{
+      outline:none;border-color:var(--ios-blue);box-shadow:0 0 0 3px rgba(0,122,255,0.12);background:#fff;
+    }
+
+    /* === 工具类（替代重复内联样式） === */
+    .form-row{display:flex;align-items:center;gap:8px}
+    .btn-row{display:flex;gap:8px;margin-bottom:12px}
+    .helper-text{font-size:11px;color:var(--ios-text3);margin-top:2px}
+    .link-row{text-align:center;margin-top:12px;font-size:13px;color:var(--ios-text3)}
+    .link-row a{color:var(--ios-blue)}
+    .section-title.no-mt{margin-top:0}
+    .btn-full{width:100%}
+    .btn-logout{width:100%;margin-top:12px;color:var(--ios-red);border-color:var(--ios-red)}
+    .header-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:none;padding:4px 10px;font-size:14px;min-width:auto;min-height:auto;background:transparent;border:none;color:var(--ios-blue);font-weight:500}
+    .header-user{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:600;color:var(--ios-blue);display:none}
+    .user-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--ios-sep);font-size:13px}
+    .user-info{flex:1;min-width:0}
+    .user-name{font-weight:500;color:var(--ios-text)}
+    .user-sub{color:var(--ios-text3);font-size:12px}
+    .user-actions{display:flex;gap:6px;flex-shrink:0}
+    .btn-mini{padding:4px 12px;min-width:auto;min-height:auto;font-size:13px}
+    .list-tip{color:var(--ios-text3);text-align:center;padding:12px}
+    .group-card.compact{margin-bottom:10px}
+    .channel-title{background:#E8F0FE;border-radius:6px;padding:8px 10px;cursor:pointer;position:sticky;top:86px;z-index:10}
+    .channel-title .arrow{float:right}
+  </style>
+<script data-cfasync="false">document.documentElement.style.visibility='hidden';</script>
+</head>
+<body>
+<!-- SVG 图标定义（symbol 复用） -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="icon-login" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="icon-create" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></symbol>
+  <symbol id="icon-driver" viewBox="0 0 24 24"><rect x="1" y="10" width="14" height="8" rx="1"/><path d="M15 14h3l3-4v8h-6"/><circle cx="5.5" cy="19" r="1.5"/><circle cx="17.5" cy="19" r="1.5"/><path d="M5 10V6h6v4"/></symbol>
+  <symbol id="icon-storage" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+</svg>
+
+<!-- 离线/在线状态条 -->
+<div class="status-bar" id="statusBar"></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- 确认弹窗 -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h4 id="modalTitle">提示</h4>
+    <p id="modalMsg"></p>
+    <button class="btn btn-outline" id="modalCancel">取消</button>
+    <button class="btn btn-primary" id="modalConfirm">确定</button>
+  </div>
+</div>
+
+<!-- 输入弹窗（用于重置密码等敏感输入，避免明文暴露） -->
+<div class="modal-overlay" id="promptOverlay">
+  <div class="modal">
+    <h4 id="promptTitle">提示</h4>
+    <p id="promptMsg"></p>
+    <input type="password" id="promptInput" class="prompt-input" autocomplete="new-password" placeholder="请输入" />
+    <button class="btn btn-outline" id="promptCancel">取消</button>
+    <button class="btn btn-primary" id="promptConfirm">确定</button>
+  </div>
+</div>
+
+<div class="header" id="pageHeader">
+  <button class="btn btn-sm header-btn" id="headerBackBtn">← 返回</button>
+  <span id="pageTitle">创建补货</span>
+  <span id="headerUserName" class="header-user"></span>
+</div>
+
+<!-- 页面1：登录 -->
+<div id="page-login" class="page active">
+  <div class="group-card" id="loginFormCard">
+    <div class="form-group">
+      <label>工号</label>
+      <input type="text" id="loginEmpId" placeholder="请输入工号" autocomplete="off">
+      <div class="helper-text">如忘记工号，请联系本店管理员找回</div>
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="loginPassword" placeholder="请输入密码">
+      <div class="helper-text">如忘记密码，请联系本店管理员重置</div>
+    </div>
+    <button class="btn btn-primary btn-full" id="loginBtn">登录</button>
+    <div class="link-row">
+      还没有账号？<a href="javascript:void(0)" id="showRegisterBtn">立即注册</a>
+    </div>
+  </div>
+
+  <div class="group-card" id="registerFormCard" style="display:none">
+    <div class="form-group">
+      <label>工号</label>
+      <input type="text" id="regEmpId" placeholder="请输入工号" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>姓名</label>
+      <input type="text" id="regName" placeholder="请输入姓名" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="regPassword" placeholder="请输入密码">
+    </div>
+    <div class="form-group">
+      <label>确认密码</label>
+      <input type="password" id="regPassword2" placeholder="请再次输入密码">
+    </div>
+    <div class="form-group">
+      <label>店号</label>
+      <select id="regStore">
+        <option value="">请选择店号</option>
+        <option value="6512">6512</option>
+        <option value="4814">4814</option>
+        <option value="6567">6567</option>
+        <option value="6526">6526</option>
+        <option value="6508">6508</option>
+        <option value="6513">6513</option>
+        <option value="4839">4839</option>
+        <option value="6511">6511</option>
+        <option value="6533">6533</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>角色</label>
+      <select id="regRole">
+        <option value="">请选择角色</option>
+        <option value="补货员">补货员</option>
+        <option value="叉车司机">叉车司机</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full" id="registerBtn">注册</button>
+    <div class="link-row">
+      已有账号？<a href="javascript:void(0)" id="showLoginBtn">返回登录</a>
+    </div>
+  </div>
+
+  <div class="group-card" id="userInfoCard" style="display:none">
+    <div class="section-title no-mt">用户信息</div>
+    <div style="font-size:14px;color:var(--ios-text);line-height:2">
+      <div>工号：<span id="infoEmpId"></span></div>
+      <div>姓名：<span id="infoName"></span></div>
+      <div>店号：<span id="infoStore"></span></div>
+      <div>角色：<span id="infoRole"></span></div>
+    </div>
+    <button class="btn btn-outline btn-logout" id="logoutBtn">退出登录</button>
+  </div>
+
+  <div class="group-card" id="approvalPanel" style="display:none">
+    <div class="section-title no-mt">待审批用户</div>
+    <div id="approvalList" style="max-height:200px;overflow-y:auto"></div>
+  </div>
+
+  <div class="group-card" id="userMgmtPanel" style="display:none">
+    <div class="section-title no-mt">本店用户管理</div>
+    <div id="userMgmtList" style="max-height:200px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- 页面2：创建补货需求 -->
+<div id="page-create" class="page">
+  <div class="group-card">
+    <div class="form-group form-row">
+      <label style="white-space:nowrap;font-weight:700;color:#000;font-size:15px">商品号</label>
+      <input type="text" id="goodsSearch" placeholder="手动输入" autocomplete="off" style="flex:1">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary perm-create" id="searchBtn" style="flex:1">查询</button>
+      <button class="btn btn-link perm-create" id="gotoListBtn" style="flex:1;text-decoration:underline">《查看补货清单》</button>
+    </div>
+    <div id="goodsPreview" style="display:none">
+      <div class="info-box" id="goodsInfo"></div>
+      <div id="shelfSection" style="display:none">
+        <div class="section-title">选择卡板号（可多选）</div>
+        <div class="checkbox-group" id="shelfCheckboxes"></div>
+      </div>
+      <div id="palletSection" style="display:none">
+        <div class="section-title">对应卡板</div>
+        <div class="checkbox-group" id="palletCheckboxes"></div>
+      </div>
+    </div>
+    <div id="noGoodsMsg" style="display:none;padding:12px;background:rgba(255,59,48,0.08);color:#FF3B30;border-radius:10px;margin:10px 0;font-size:14px"></div>
+    <button class="btn btn-primary btn-block" id="submitDemand" style="margin-top:12px;display:none">提交补货需求</button>
+  </div>
+</div>
+
+<!-- 页面2-1：补货清单 -->
+<div id="page-list" class="page">
+  <div class="dept-nav" id="deptNav"></div>
+  <div class="form-row" style="padding:0 0 8px">
+    <label style="white-space:nowrap;font-size:14px">商品号</label>
+    <input type="text" id="demandSearchInput" placeholder="输入商品号" autocomplete="off" style="flex:1;height:40px;font-size:16px">
+    <button class="btn btn-primary perm-list" id="demandSearchBtn" style="white-space:nowrap;min-width:60px">搜索</button>
+  </div>
+  <div id="demandBatchBar" style="display:none">
+    <label style="white-space:nowrap;font-size:14px;display:flex;align-items:center;gap:4px">
+      <input type="checkbox" id="selectAllDemand"> 全选
+    </label>
+    <button class="btn btn-danger btn-sm" id="batchDeleteBtn" style="white-space:nowrap">批量删除</button>
+    <span id="selectedCount" style="font-size:13px;color:#888"></span>
+  </div>
+  <div id="demandListContainer"></div>
+</div>
+
+<!-- 页面3：司机下货 -->
+<div id="page-driver" class="page">
+  <div class="dept-nav" id="driverDeptNav" style="position:sticky;top:44px;z-index:20;background:var(--ios-bg)"></div>
+  <div id="driverContainer"></div>
+</div>
+
+<!-- 页面4：上传库位 -->
+<div id="page-storage" class="page">
+  <div class="group-card">
+    <div class="section-title no-mt">上传库位数据</div>
+    <div class="upload-box" id="uploadArea">
+      <div id="uploadPrompt" style="color:#888;margin-bottom:10px;font-size:14px">点击、拖拽、粘贴上传Excel文件</div>
+      <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none">
+      <div id="uploadFileName" style="font-size:14px;color:#007AFF;margin-top:6px;font-weight:500"></div>
+    </div>
+    <div class="perm-upload-tip">仅管理员可上传数据</div>
+    <div id="uploadResult" style="margin-top:12px;padding:10px;border-radius:10px;display:none;font-size:14px"></div>
+    <div id="uploadProgress" style="margin-top:12px;display:none">
+      <div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
+      <div class="progress-text" id="progressText"></div>
+    </div>
+  </div>
+
+  <div class="group-card">
+    <div class="section-title no-mt">上传叉货路线</div>
+    <div class="upload-box" id="routeUploadArea">
+      <div id="routeUploadPrompt" style="color:#888;margin-bottom:10px;font-size:14px">点击、拖拽、粘贴上传Excel文件</div>
+      <input type="file" id="routeExcelFile" accept=".xlsx,.xls" style="display:none">
+      <div id="routeUploadFileName" style="font-size:14px;color:#007AFF;margin-top:6px;font-weight:500"></div>
+    </div>
+    <div class="perm-upload-tip">仅管理员可上传数据</div>
+    <div id="routeUploadResult" style="margin-top:12px;padding:10px;border-radius:10px;display:none;font-size:14px"></div>
+    <div id="routeUploadProgress" style="margin-top:12px;display:none">
+      <div class="progress-bar"><div class="progress-fill" id="routeProgressBar"></div></div>
+      <div class="progress-text" id="routeProgressText"></div>
+    </div>
+  </div>
+</div>
+<script data-cfasync="false">(function(){
+  var p=localStorage.getItem('currentPage')||'login';
+  var titles={login:'登录',create:'创建补货',list:'补货清单',driver:'司机下货',storage:'数据上传'};
+  var user=null;
+  try{user=JSON.parse(localStorage.getItem('currentUser'));}catch(e){}
+  // 切换页面 active 类
+  if(p!=='login'){
+    var loginEl=document.getElementById('page-login');
+    if(loginEl)loginEl.classList.remove('active');
+    var el=document.getElementById('page-'+p);
+    if(el)el.classList.add('active');
+  }
+  // 同步更新页面标题，避免显示默认的"创建补货"
+  var titleEl=document.getElementById('pageTitle');
+  if(titleEl&&titles[p])titleEl.textContent=titles[p];
+  // 非登录页显示返回按钮（仅 list 页需要）
+  var backBtn=document.getElementById('headerBackBtn');
+  if(backBtn)backBtn.style.display=(p==='list')?'block':'none';
+  // 非登录页且已登录，显示店号:姓名
+  var nameEl=document.getElementById('headerUserName');
+  if(nameEl){
+    if(p!=='login'&&user){
+      nameEl.textContent=user.store_no+'：'+user.name;
+      nameEl.style.display='block';
+    }else{
+      nameEl.style.display='none';
+    }
+  }
+  document.documentElement.style.visibility='';
+})();</script>
+
+<!-- 底部导航 -->
+<div class="tab-bar" id="tabBar" style="display:none">
+  <div class="tab" data-page="login"><span class="tab-icon"><svg><use href="#icon-login"/></svg></span><span>登录</span></div>
+  <div class="tab" data-page="create"><span class="tab-icon"><svg><use href="#icon-create"/></svg></span><span>创建补货</span></div>
+  <div class="tab" data-page="driver"><span class="tab-icon"><svg><use href="#icon-driver"/></svg></span><span>司机下货</span></div>
+  <div class="tab" data-page="storage"><span class="tab-icon"><svg><use href="#icon-storage"/></svg></span><span>数据上传</span></div>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  import * as XLSX from 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm';
+
+  // ================== Supabase 配置 ==================
+  const SUPABASE_URL = 'https://rxseaknvkoxknzoxtvbt.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4c2Vha252a294a256b3h0dmJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MDgyMzksImV4cCI6MjA5NjM4NDIzOX0.VbvEvAy8l7xJO7fJQBrgXplNRJy749QdrYtfdE6CIfM';
+  // ==================================================
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ==================== 实时同步（Supabase Realtime） ====================
+  let currentPageName = localStorage.getItem('currentPage') || 'login';
+  let realtimeSubscribed = false;
+  let realtimeRetryCount = 0;
+  let realtimeRetryTimer = null;
+  let realtimeChannel = null;
+  let pageUnloading = false;
+  // 本地刚操作的记录 ID → 过期时间戳。按 ID 精确去重，避免全局时间窗误杀他人并发变更
+  const recentLocalIds = new Map();
+  const LOCAL_ACTION_TTL = 3000;
+
+  /**
+   * 标记刚执行了本地写操作（按记录 ID 去重）
+   * @param {string|number|Array<string|number>|null} idOrIds 受影响的记录 id（或数组）；INSERT 未知 id 时传 null
+   */
+  function notifyLocalAction(idOrIds) {
+    if (idOrIds == null) return;
+    const now = Date.now();
+    const expire = now + LOCAL_ACTION_TTL;
+    const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+    for (const id of ids) {
+      if (id != null) recentLocalIds.set(String(id), expire);
+    }
+    // 顺手清理过期项，避免 Map 无限增长
+    for (const [k, v] of recentLocalIds) {
+      if (v <= now) recentLocalIds.delete(k);
+    }
+  }
+
+  /**
+   * 判断该 id 是否为本地刚操作的回声；若是则消费并返回 true
+   * @param {string|number|null} id
+   * @returns {boolean}
+   */
+  function isLocalAction(id) {
+    if (id == null) return false;
+    const key = String(id);
+    const expire = recentLocalIds.get(key);
+    if (!expire) return false;
+    if (Date.now() > expire) {
+      recentLocalIds.delete(key);
+      return false;
+    }
+    return true;
+  }
+
+  /** 消费本地回声标记（处理一次后即移除，避免长期残留） */
+  function consumeLocalAction(id) {
+    if (id == null) return false;
+    const hit = isLocalAction(id);
+    if (hit) recentLocalIds.delete(String(id));
+    return hit;
+  }
+
+  /**
+   * 处理 Supabase Realtime 推送的行级变更
+   * - 补货清单页：增量更新 allDemandData 并按需重渲染
+   * - 司机下货页：增量更新 allDriverData / allUnloadedData 并重渲染
+   * - 失败时回退到整页重载
+   * @param {{eventType:string,new:object,old:object}} payload
+   */
+  function handleRealtimeChange(payload) {
+    try {
+      const { eventType, new: newRow, old: oldRow } = payload;
+      const oldId = oldRow ? oldRow.id : null;
+      const newId = newRow ? newRow.id : null;
+
+      if (currentPageName === 'list') {
+        // 补货清单页面：增量更新本地缓存，避免网络重载
+        if (eventType === 'INSERT' && newRow && newRow.status === 'pending') {
+          // INSERT 不做 ID 去重：本地提交时未知 DB 生成的 id，依赖 some() 去重即可
+          if (!allDemandData.some(r => r.id === newRow.id)) {
+            allDemandData.push(newRow);
+            renderDemandList();
+          }
+        } else if (eventType === 'UPDATE' && newRow) {
+          // P1-10：仅跳过自己刚操作的那条记录，避免误杀他人并发变更
+          if (consumeLocalAction(newId)) return;
+          if (newRow.status === 'pending') {
+            const idx = allDemandData.findIndex(r => r.id === newRow.id);
+            if (idx >= 0) {
+              if (JSON.stringify(allDemandData[idx]) !== JSON.stringify(newRow)) {
+                allDemandData[idx] = newRow;
+                renderDemandList();
+              }
+            } else {
+              allDemandData.push(newRow);
+              renderDemandList();
+            }
+          } else {
+            // 状态变为非 pending（如 unloaded），从清单移除
+            const before = allDemandData.length;
+            allDemandData = allDemandData.filter(r => r.id !== newRow.id);
+            if (allDemandData.length !== before) renderDemandList();
+          }
+        } else if (eventType === 'DELETE') {
+          // P1-10：仅跳过自己刚删除的那条记录
+          if (consumeLocalAction(oldId)) return;
+          // P2-16：DELETE 的 oldRow 可能为 null（Supabase 不一定返回 old），无法定位 id 时安全回退到重载
+          if (oldId == null) {
+            loadDemandList();
+            return;
+          }
+          const before = allDemandData.length;
+          allDemandData = allDemandData.filter(r => String(r.id) !== String(oldId));
+          if (allDemandData.length !== before) renderDemandList();
+        }
+      } else if (currentPageName === 'driver') {
+        // 司机下货页面：增量更新本地缓存，避免整体重载导致闪烁
+        if (eventType === 'INSERT') {
+          // P2-17：INSERT 可能是 pending 或 unloaded（例如上传时直接写入 unloaded），分别推入对应集合
+          if (newRow && newRow.status === 'pending') {
+            if (!allDriverData.some(r => r.id === newRow.id)) {
+              allDriverData.push(newRow);
+              if (currentDriverZone !== '已下货') renderDriverList();
+            }
+          } else if (newRow && newRow.status === 'unloaded') {
+            if (!allUnloadedData.some(r => r.id === newRow.id)) {
+              allUnloadedData.push(newRow);
+              if (currentDriverZone === '已下货') renderUnloadedList();
+            }
+          }
+        } else if (eventType === 'UPDATE') {
+          // P1-10：仅跳过自己刚操作的那条记录
+          if (consumeLocalAction(newId)) return;
+          // 记录可能从 pending → unloaded，或字段变更
+          if (newRow && newRow.status === 'unloaded') {
+            allDriverData = allDriverData.filter(r => r.id !== newRow.id);
+            allUnloadedData = allUnloadedData.filter(r => r.id !== newRow.id);
+            allUnloadedData.push(newRow);
+          } else if (newRow && newRow.status === 'pending') {
+            allUnloadedData = allUnloadedData.filter(r => r.id !== newRow.id);
+            const idx = allDriverData.findIndex(r => r.id === newRow.id);
+            if (idx >= 0) {
+              allDriverData[idx] = newRow;
+            } else {
+              allDriverData.push(newRow);
+            }
+          }
+          if (currentDriverZone === '已下货') {
+            renderUnloadedList();
+          } else {
+            renderDriverList();
+          }
+        } else if (eventType === 'DELETE') {
+          // P1-10：仅跳过自己刚删除的那条记录
+          if (consumeLocalAction(oldId)) return;
+          // P2-16：DELETE oldRow 可能为 null，无法定位时安全回退到重载
+          if (oldId == null) {
+            loadDriverView();
+            return;
+          }
+          allDriverData = allDriverData.filter(r => String(r.id) !== String(oldId));
+          allUnloadedData = allUnloadedData.filter(r => String(r.id) !== String(oldId));
+          if (currentDriverZone === '已下货') {
+            renderUnloadedList();
+          } else {
+            renderDriverList();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Realtime增量更新失败，回退到重载:', e);
+      if (currentPageName === 'list') loadDemandList();
+      else if (currentPageName === 'driver') loadDriverView();
+    }
+  }
+
+  /**
+   * 初始化 Supabase Realtime 订阅
+   * 监听本店 replenish_demand 表的 INSERT/UPDATE/DELETE 事件
+   * 连接异常时自动触发 scheduleReconnect 指数退避重连
+   */
+  function initRealtime() {
+    if (realtimeSubscribed) return;
+    const user = getCurrentUser();
+    if (!user) return;
+
+    clearTimeout(realtimeRetryTimer);
+    try {
+      realtimeChannel = supabase.channel('demand-changes', {
+        config: { broadcast: { self: true } }
+      });
+
+      realtimeChannel.on('postgres_changes',
+        { event: '*', schema: 'public', table: 'replenish_demand', filter: 'store_no=eq.' + user.store_no },
+        (payload) => handleRealtimeChange(payload)
+      );
+
+      // 自定义路线变更：跨设备/跨管理员同步
+      realtimeChannel.on('postgres_changes',
+        { event: '*', schema: 'public', table: 'custom_routes', filter: 'store_no=eq.' + user.store_no },
+        () => scheduleCustomRouteReload()
+      );
+
+      realtimeChannel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          realtimeSubscribed = true;
+          realtimeRetryCount = 0;
+          console.log('Realtime 已连接');
+        } else if (status === 'CHANNEL_ERROR') {
+          realtimeSubscribed = false;
+          console.error('Realtime 通道错误');
+          if (!pageUnloading) scheduleReconnect();
+        } else if (status === 'TIMED_OUT') {
+          realtimeSubscribed = false;
+          console.warn('Realtime 连接超时');
+          if (!pageUnloading) scheduleReconnect();
+        } else if (status === 'CLOSED') {
+          realtimeSubscribed = false;
+          console.warn('Realtime 连接已关闭');
+          if (!pageUnloading) scheduleReconnect();
+        }
+      });
+    } catch (e) {
+      console.error('Realtime 初始化失败:', e);
+      realtimeSubscribed = false;
+      if (!pageUnloading) scheduleReconnect();
+    }
+  }
+
+  /**
+   * Realtime 指数退避重连：2s → 4s → 8s → 16s → 30s（上限）
+   * 重连次数由 realtimeRetryCount 累计，成功后归零
+   */
+  function scheduleReconnect() {
+    clearTimeout(realtimeRetryTimer);
+    realtimeRetryCount++;
+    // 指数退避：2s, 4s, 8s, 16s, max 30s
+    const delay = Math.min(2000 * Math.pow(2, realtimeRetryCount - 1), 30000);
+    console.log(`Realtime 将在 ${delay}ms 后重连 (第${realtimeRetryCount}次)`);
+    realtimeRetryTimer = setTimeout(() => {
+      if (realtimeChannel) {
+        try { supabase.removeChannel(realtimeChannel); } catch (e) {}
+      }
+      initRealtime();
+    }, delay);
+  }
+
+  // ==================== PWA 初始化 ====================
+  (function initPWA() {
+    // 生成 manifest
+    const manifest = {
+      name: '补货系统',
+      short_name: '补货',
+      description: '创建补货任务管理工具',
+      start_url: location.href,
+      display: 'standalone',
+      orientation: 'portrait',
+      background_color: '#f2f2f7',
+      theme_color: '#007AFF',
+      icons: [{
+        src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect fill="#007AFF" width="192" height="192" rx="32"/><text x="96" y="120" text-anchor="middle" fill="white" font-size="80" font-weight="bold" font-family="sans-serif">补</text></svg>'),
+        sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable'
+      }]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    document.getElementById('manifestLink').href = URL.createObjectURL(blob);
+
+    // 注册 Service Worker
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      navigator.serviceWorker.register('sw.js', { scope: '/' })
+        .then(reg => {
+          console.log('SW 注册成功:', reg.scope);
+          // 强制检查更新
+          reg.update();
+        })
+        .catch(err => console.log('SW 注册失败（非HTTPS环境可忽略）:', err.message));
+    }
+  })();
+
+  // ==================== 网络状态监测 ====================
+  const statusBar = document.getElementById('statusBar');
+  let isOnline = navigator.onLine;
+
+  function updateOnlineStatus(online) {
+    isOnline = online;
+    statusBar.className = 'status-bar ' + (online ? 'online' : 'offline');
+    statusBar.textContent = online ? '网络已恢复' : '当前处于离线状态';
+    statusBar.classList.add('show');
+    clearTimeout(statusBar._timer);
+    statusBar._timer = setTimeout(() => statusBar.classList.remove('show'), 2500);
+  }
+
+  window.addEventListener('online', () => { updateOnlineStatus(true); initRealtime(); });
+  window.addEventListener('offline', () => updateOnlineStatus(false));
+
+  // 离线状态拦截：阻止用户在离线时发起操作
+  function checkOnlineOrToast() {
+    if (!navigator.onLine) {
+      showToast('当前处于离线状态，请检查网络', 3000);
+      return false;
+    }
+    return true;
+  }
+
+  // 供 Realtime 模块调用
+  function showStatusBar(type, msg) {
+    statusBar.className = 'status-bar ' + type;
+    statusBar.textContent = msg;
+    statusBar.classList.add('show');
+    clearTimeout(statusBar._timer);
+    statusBar._timer = setTimeout(() => statusBar.classList.remove('show'), 3000);
+  }
+
+  // ==================== Toast 工具 ====================
+  const toast = document.getElementById('toast');
+  let toastTimer;
+
+  function showToast(msg, duration = 2000) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+  }
+
+  // ==================== 确认弹窗 ====================
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalMsg = document.getElementById('modalMsg');
+  const modalCancel = document.getElementById('modalCancel');
+  const modalConfirm = document.getElementById('modalConfirm');
+
+  function showModal(title, msg) {
+    return new Promise(resolve => {
+      modalTitle.textContent = title;
+      modalMsg.textContent = msg;
+      modalOverlay.classList.add('show');
+      const cleanup = (result) => {
+        modalOverlay.classList.remove('show');
+        modalCancel.removeEventListener('click', onCancel);
+        modalConfirm.removeEventListener('click', onConfirm);
+        resolve(result);
+      };
+      const onCancel = () => cleanup(false);
+      const onConfirm = () => cleanup(true);
+      modalCancel.addEventListener('click', onCancel);
+      modalConfirm.addEventListener('click', onConfirm);
+    });
+  }
+
+  // P2-20：带密码输入的模态框，替代明文 prompt()
+  const promptOverlay = document.getElementById('promptOverlay');
+  const promptTitle = document.getElementById('promptTitle');
+  const promptMsg = document.getElementById('promptMsg');
+  const promptInput = document.getElementById('promptInput');
+  const promptCancel = document.getElementById('promptCancel');
+  const promptConfirm = document.getElementById('promptConfirm');
+
+  /**
+   * 弹出输入模态框（type=password，避免明文暴露）
+   * @param {string} title 标题
+   * @param {string} msg 提示文字
+   * @param {string} [placeholder] 输入框占位符
+   * @returns {Promise<string|null>} 用户输入的值；取消则返回 null
+   */
+  function showPromptModal(title, msg, placeholder) {
+    return new Promise(resolve => {
+      promptTitle.textContent = title;
+      promptMsg.textContent = msg;
+      promptInput.value = '';
+      promptInput.placeholder = placeholder || '请输入';
+      promptOverlay.classList.add('show');
+      // 自动聚焦
+      setTimeout(() => promptInput.focus(), 50);
+      const cleanup = (result) => {
+        promptOverlay.classList.remove('show');
+        promptCancel.removeEventListener('click', onCancel);
+        promptConfirm.removeEventListener('click', onConfirm);
+        promptInput.removeEventListener('keydown', onKey);
+        resolve(result);
+      };
+      const onCancel = () => cleanup(null);
+      const onConfirm = () => cleanup(promptInput.value);
+      const onKey = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); onConfirm(); }
+        else if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+      };
+      promptCancel.addEventListener('click', onCancel);
+      promptConfirm.addEventListener('click', onConfirm);
+      promptInput.addEventListener('keydown', onKey);
+    });
+  }
+
+  // ==================== 导航切换 ====================
+  const pageTitles = { login: '登录', create: '创建补货', list: '补货清单', driver: '司机下货', storage: '数据上传' };
+  const pageTitleEl = document.getElementById('pageTitle');
+  const headerBackBtn = document.getElementById('headerBackBtn');
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const pageName = tab.dataset.page;
+      switchToPage(pageName);
+      if (pageName === 'driver') loadDriverView();
+    });
+  });
+
+// ==========================================
+  // 页面1：登录/注册 / 权限管理
+  // ==========================================
+  const loginFormCard = document.getElementById('loginFormCard');
+  const registerFormCard = document.getElementById('registerFormCard');
+  const userInfoCard = document.getElementById('userInfoCard');
+
+  // 获取当前登录用户
+  /**
+   * 从 localStorage 读取当前登录用户
+   * @returns {{id:number,emp_id:string,name:string,store_no:string,role:string,status:string}|null}
+   */
+  function getCurrentUser() {
+    const u = localStorage.getItem('currentUser');
+    return u ? JSON.parse(u) : null;
+  }
+
+  /**
+   * 权限检查
+   * 角色：补货员（create+list）、叉车司机（create+driver）、管理员（全部）
+   * @param {'create'|'list'|'driver'|'storage'|'approve'} action
+   * @returns {boolean}
+   */
+  function hasPermission(action) {
+    const user = getCurrentUser();
+    if (!user) return false;
+    if (user.role === '管理员') return true;
+    if (action === 'create') return user.role === '补货员' || user.role === '叉车司机';
+    if (action === 'list') return user.role === '补货员';
+    if (action === 'driver') return user.role === '叉车司机';
+    if (action === 'storage') return false; // 仅管理员
+    if (action === 'customRoute') return false; // 仅管理员
+    if (action === 'approve') return false;
+    return false;
+  }
+
+  /**
+   * 密码哈希（最新算法：PBKDF2，以工号 empId 作为盐，100000 次迭代，SHA-256，输出 256bit）
+   * @param {string} pwd 明文密码
+   * @param {string} empId 工号
+   * @returns {Promise<string>} 64 位十六进制哈希
+   */
+  async function hashPassword(pwd, empId) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pwd), 'PBKDF2', false, ['deriveBits']);
+    const salt = enc.encode(empId + '_replenish_pbkdf2');
+    const bits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+      keyMaterial,
+      256
+    );
+    return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  /**
+   * 旧版密码哈希 v2（SHA-256 + empId 盐，单轮）。仅用于登录时兼容迁移到 PBKDF2
+   * @param {string} pwd 明文密码
+   * @param {string} empId 工号
+   * @returns {Promise<string>}
+   */
+  async function hashPasswordSha(pwd, empId) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pwd + '_' + empId + '_replenish');
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  /**
+   * 旧版密码哈希 v1（固定盐，仅用于登录时兼容迁移）
+   * @param {string} pwd 明文密码
+   * @returns {Promise<string>}
+   */
+  async function hashPasswordLegacy(pwd) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pwd + 'sam_replenish_salt');
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // 检查登录状态
+  function checkLoginStatus() {
+    const user = getCurrentUser();
+    const approvalPanel = document.getElementById('approvalPanel');
+    const userMgmtPanel = document.getElementById('userMgmtPanel');
+    const tabBar = document.getElementById('tabBar');
+    if (user) {
+      loginFormCard.style.display = 'none';
+      registerFormCard.style.display = 'none';
+      userInfoCard.style.display = 'block';
+      if (currentPageName === 'login') pageTitleEl.textContent = user.role;
+      document.getElementById('infoEmpId').textContent = user.emp_id;
+      document.getElementById('infoName').textContent = user.name;
+      document.getElementById('infoStore').textContent = user.store_no;
+      document.getElementById('infoRole').textContent = user.role;
+      document.getElementById('headerUserName').style.display = (currentPageName === 'login') ? 'none' : 'block'; // 登录页隐藏，其他页显示
+      tabBar.style.display = '';
+      if (user.role === '管理员' && approvalPanel && currentPageName === 'login') {
+        approvalPanel.style.display = 'block';
+        loadPendingUsers();
+        if (userMgmtPanel) { userMgmtPanel.style.display = 'block'; loadManagedUsers(); }
+      }
+    } else {
+      loginFormCard.style.display = 'block';
+      registerFormCard.style.display = 'none';
+      userInfoCard.style.display = 'none';
+      pageTitleEl.textContent = '登录';
+      document.getElementById('headerUserName').style.display = 'none';
+      if (approvalPanel) approvalPanel.style.display = 'none';
+      if (userMgmtPanel) userMgmtPanel.style.display = 'none';
+      // 隐藏底部导航，只显示登录页面
+      tabBar.style.display = 'none';
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-login').classList.add('active');
+    }
+    updatePagePermissions();
+  }
+
+  // 根据权限更新页面控件状态
+  function updatePagePermissions() {
+    const user = getCurrentUser();
+    // 更新body类名用于CSS权限控制
+    document.body.classList.remove('role-admin', 'role-replenisher', 'role-driver', 'logged-in');
+    if (user) {
+      document.body.classList.add('logged-in');
+      if (user.role === '管理员') document.body.classList.add('role-admin');
+      if (user.role === '补货员') document.body.classList.add('role-replenisher');
+      if (user.role === '叉车司机') document.body.classList.add('role-driver');
+    }
+
+    // 数据上传页面 - 只有管理员能操作
+    const canStorage = hasPermission('storage');
+    const uploadArea = document.getElementById('uploadArea');
+    const routeUploadArea = document.getElementById('routeUploadArea');
+    if (uploadArea) uploadArea.style.display = canStorage ? '' : 'none';
+    if (routeUploadArea) routeUploadArea.style.display = canStorage ? '' : 'none';
+
+    // 管理员面板仅在登录页显示
+    if (currentPageName !== 'login') {
+      const approvalPanel = document.getElementById('approvalPanel');
+      const userMgmtPanel = document.getElementById('userMgmtPanel');
+      if (approvalPanel) approvalPanel.style.display = 'none';
+      if (userMgmtPanel) userMgmtPanel.style.display = 'none';
+    }
+  }
+
+  // P1-11：登录失败计数与指数退避（会话级，防止前端暴力提交）
+  let loginAttempts = 0;
+  let loginLockUntil = 0;
+
+  // 登录
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const loginBtn = document.getElementById('loginBtn');
+    // 检查锁定窗口
+    const now = Date.now();
+    if (now < loginLockUntil) {
+      const waitSec = Math.ceil((loginLockUntil - now) / 1000);
+      showToast('登录尝试过于频繁，请 ' + waitSec + ' 秒后再试');
+      return;
+    }
+    const empId = document.getElementById('loginEmpId').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!empId) { showToast('请输入工号'); return; }
+    if (!password) { showToast('请输入密码'); return; }
+    if (!checkOnlineOrToast()) return;
+
+    loginBtn.disabled = true;
+    const origText = loginBtn.textContent;
+    loginBtn.textContent = '登录中...';
+    try {
+      // 三级哈希兼容迁移：PBKDF2（最新）→ SHA-256+empId（v2）→ 固定盐（v1）
+      const pbkdf2Hash = await hashPassword(password, empId);
+      // P2-14：select 显式列出字段，不返回 password（已在 WHERE 中匹配）
+      const cols = 'id,emp_id,name,store_no,role,status';
+      let res = await supabase.from('users').select(cols).eq('emp_id', empId).eq('password', pbkdf2Hash).single();
+      if (res.error || !res.data) {
+        // 尝试 v2（SHA-256 + empId）
+        const shaHash = await hashPasswordSha(password, empId);
+        res = await supabase.from('users').select(cols).eq('emp_id', empId).eq('password', shaHash).single();
+        if (res.data) {
+          // P2-15：迁移到 PBKDF2，按主键 id + store_no 精确限定，避免跨店误更新
+          await supabase.from('users').update({ password: pbkdf2Hash }).eq('id', res.data.id).eq('store_no', res.data.store_no);
+        } else {
+          // 尝试 v1（固定盐）
+          const legacyHash = await hashPasswordLegacy(password);
+          res = await supabase.from('users').select(cols).eq('emp_id', empId).eq('password', legacyHash).single();
+          if (res.data) {
+            await supabase.from('users').update({ password: pbkdf2Hash }).eq('id', res.data.id).eq('store_no', res.data.store_no);
+          }
+        }
+      }
+      const data = res.data;
+      const error = res.error;
+
+      if (error || !data) {
+        // P1-11：失败计数 + 指数退避（3次起 1s/2s/4s/8s 封顶）
+        loginAttempts++;
+        if (loginAttempts >= 3) {
+          const delaySec = Math.min(Math.pow(2, loginAttempts - 3), 8);
+          loginLockUntil = Date.now() + delaySec * 1000;
+          showToast('工号或密码错误，请 ' + delaySec + ' 秒后再试');
+        } else {
+          showToast('工号或密码错误');
+        }
+        return;
+      }
+
+      if (data.status === 'pending') {
+        showToast('账号待审批，请等待管理员审核', 5000);
+        return;
+      }
+      if (data.status === 'rejected') {
+        showToast('账号审批未通过', 5000);
+        return;
+      }
+
+      // 登录成功：重置计数
+      loginAttempts = 0;
+      loginLockUntil = 0;
+      const user = { emp_id: data.emp_id, name: data.name, store_no: data.store_no, role: data.role, id: data.id };
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      localStorage.setItem('currentPage', 'login');
+      checkLoginStatus();
+      showToast('登录成功');
+    } catch (e) {
+      showToast('登录失败：' + e.message);
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = origText;
+    }
+  });
+
+  // 显示注册表单
+  document.getElementById('showRegisterBtn').addEventListener('click', () => {
+    loginFormCard.style.display = 'none';
+    registerFormCard.style.display = 'block';
+    userInfoCard.style.display = 'none';
+    pageTitleEl.textContent = '注册';
+  });
+
+  // 返回登录
+  document.getElementById('showLoginBtn').addEventListener('click', () => {
+    loginFormCard.style.display = 'block';
+    registerFormCard.style.display = 'none';
+    userInfoCard.style.display = 'none';
+    pageTitleEl.textContent = '登录';
+  });
+
+  // 注册
+  document.getElementById('registerBtn').addEventListener('click', async () => {
+    const empId = document.getElementById('regEmpId').value.trim();
+    const name = document.getElementById('regName').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const password2 = document.getElementById('regPassword2').value;
+    const store = document.getElementById('regStore').value;
+    const role = document.getElementById('regRole').value;
+
+    if (!empId) { showToast('请输入工号'); return; }
+    if (!name) { showToast('请输入姓名'); return; }
+    if (!password) { showToast('请输入密码'); return; }
+    if (password !== password2) { showToast('两次密码不一致'); return; }
+    if (password.length < 6) { showToast('密码至少6位'); return; }
+    if (!store) { showToast('请选择店号'); return; }
+    if (!role) { showToast('请选择角色'); return; }
+    // 角色白名单校验：禁止手动注册管理员（首任用户自动提升除外）
+    if (!['补货员', '叉车司机'].includes(role)) { showToast('非法角色'); return; }
+    if (!checkOnlineOrToast()) return;
+
+    try {
+      // 检查工号是否已注册
+      const { data: existing } = await supabase
+        .from('users')
+        .select('emp_id')
+        .eq('emp_id', empId)
+        .maybeSingle();
+
+      if (existing) {
+        showToast('该工号已注册');
+        return;
+      }
+
+      // 判断注册状态：本店无已审批用户 → 自动通过（首任用户自动成为管理员）
+      const { count: storeApprovedUsers } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'approved')
+        .eq('store_no', store);
+
+      let status = 'pending';
+      let finalRole = role;
+      if (storeApprovedUsers === 0) {
+        // 本店首个用户自动通过，并自动设为管理员
+        status = 'approved';
+        finalRole = '管理员';
+      }
+
+      const hashed = await hashPassword(password, empId);
+      const { error } = await supabase
+        .from('users')
+        .insert({
+          emp_id: empId,
+          name: name,
+          password: hashed,
+          store_no: store,
+          role: finalRole,
+          status: status
+        });
+
+      if (error) {
+        showToast('注册失败：' + error.message);
+        return;
+      }
+
+      showToast(status === 'approved' ? '注册成功，请登录' : '注册申请已提交，等待管理员审批');
+      loginFormCard.style.display = 'block';
+      registerFormCard.style.display = 'none';
+      document.getElementById('regEmpId').value = '';
+      document.getElementById('regName').value = '';
+      document.getElementById('regPassword').value = '';
+      document.getElementById('regPassword2').value = '';
+      document.getElementById('regStore').value = '';
+      document.getElementById('regRole').value = '';
+    } catch (e) {
+      showToast('注册失败：' + e.message);
+    }
+  });
+
+  // 退出登录
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('currentUser');
+    checkLoginStatus();
+    showToast('已退出登录');
+  });
+
+  /** 加载本店待审批用户列表（仅管理员可见） */
+  async function loadPendingUsers() {
+    const listEl = document.getElementById('approvalList');
+    if (!listEl) return;
+    try {
+      const user = getCurrentUser();
+      const { data, error } = await supabase
+        .from('users')
+        .select('id,name,emp_id,store_no,role,created_at')
+        .eq('status', 'pending')
+        .eq('store_no', user.store_no)
+        .order('created_at', { ascending: false });
+
+      if (error) { listEl.innerHTML = '<div class="list-tip">加载失败</div>'; return; }
+      if (!data || data.length === 0) {
+        listEl.innerHTML = '<div class="list-tip">暂无待审批用户</div>';
+        return;
+      }
+      listEl.innerHTML = data.map(u => `
+        <div class="user-row">
+          <div class="user-info">
+            <div class="user-name">${escHtml(u.name)} (${escHtml(u.emp_id)})</div>
+            <div class="user-sub">${escHtml(u.store_no)} · ${escHtml(u.role)}</div>
+          </div>
+          <div class="user-actions">
+            <button class="btn btn-sm btn-mini btn-success" data-approve="${u.id}">通过</button>
+            <button class="btn btn-sm btn-mini btn-danger" data-reject="${u.id}">拒绝</button>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      listEl.innerHTML = '<div style="color:var(--ios-red);text-align:center;padding:12px">加载失败</div>';
+    }
+  }
+
+  // 待审批列表事件委托（仅绑定一次）
+  (function setupApprovalDelegation() {
+    const listEl = document.getElementById('approvalList');
+    if (!listEl) return;
+    listEl.addEventListener('click', async (e) => {
+      const approveBtn = e.target.closest('[data-approve]');
+      if (approveBtn) {
+        if (!hasPermission('approve')) { showToast('无操作权限'); return; }
+        const id = approveBtn.dataset.approve;
+        const user = getCurrentUser();
+        if (String(id) === String(user.id)) { showToast('不能操作自身'); return; }
+        const { error } = await supabase.from('users').update({ status: 'approved' }).eq('id', id).eq('store_no', user.store_no);
+        if (error) { showToast('操作失败'); return; }
+        showToast('已通过审批');
+        const mgmtPanel = document.getElementById('userMgmtPanel');
+        if (mgmtPanel) mgmtPanel.style.display = 'block';
+        await loadPendingUsers();
+        await loadManagedUsers();
+        return;
+      }
+      const rejectBtn = e.target.closest('[data-reject]');
+      if (rejectBtn) {
+        if (!hasPermission('approve')) { showToast('无操作权限'); return; }
+        const id = rejectBtn.dataset.reject;
+        const user = getCurrentUser();
+        if (String(id) === String(user.id)) { showToast('不能操作自身'); return; }
+        const { error } = await supabase.from('users').update({ status: 'rejected' }).eq('id', id).eq('store_no', user.store_no);
+        if (error) { showToast('操作失败'); return; }
+        showToast('已拒绝');
+        loadPendingUsers();
+      }
+    });
+  })();
+
+  /** 加载本店可管理用户（排除当前登录用户，支持角色切换/重置密码/删除） */
+  async function loadManagedUsers() {
+    const listEl = document.getElementById('userMgmtList');
+    if (!listEl) return;
+    try {
+      const user = getCurrentUser();
+      const { data, error } = await supabase
+        .from('users')
+        .select('id,name,emp_id,store_no,role')
+        .eq('store_no', user.store_no)
+        .eq('status', 'approved')
+        .neq('id', user.id);
+
+      if (error) { listEl.innerHTML = '<div class="list-tip">加载失败</div>'; return; }
+      if (!data || data.length === 0) {
+        listEl.innerHTML = '<div class="list-tip">暂无本店用户</div>';
+        return;
+      }
+      listEl.innerHTML = data.map(u => `
+        <div class="user-row">
+          <div class="user-info">
+            <div class="user-name">${escHtml(u.name)} (${escHtml(u.emp_id)})</div>
+            <div class="user-sub" data-role-display="${u.id}">${escHtml(u.role)}</div>
+          </div>
+          <div class="user-actions">
+            <select class="btn btn-sm btn-mini" style="padding:4px 8px;font-size:12px;border:0.5px solid var(--ios-sep);border-radius:8px;background:var(--ios-bg)" data-role="${u.id}">
+              <option value="补货员" ${u.role === '补货员' ? 'selected' : ''}>补货员</option>
+              <option value="叉车司机" ${u.role === '叉车司机' ? 'selected' : ''}>叉车司机</option>
+              <option value="管理员" ${u.role === '管理员' ? 'selected' : ''}>管理员</option>
+            </select>
+            <button class="btn btn-sm btn-mini btn-primary" style="padding:4px 8px;font-size:12px" data-reset="${u.id}" data-emp="${escHtml(u.emp_id)}">重置密码</button>
+            <button class="btn btn-sm btn-mini btn-danger" data-delete="${u.id}">删除</button>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      listEl.innerHTML = '<div style="color:var(--ios-red);text-align:center;padding:12px">加载失败</div>';
+    }
+  }
+
+  // 用户管理列表事件委托（仅绑定一次）
+  (function setupUserMgmtDelegation() {
+    const listEl = document.getElementById('userMgmtList');
+    if (!listEl) return;
+
+    // 角色切换
+    listEl.addEventListener('change', async (e) => {
+      const sel = e.target.closest('[data-role]');
+      if (!sel) return;
+      if (!hasPermission('approve')) { showToast('无操作权限'); loadManagedUsers(); return; }
+      const id = sel.dataset.role;
+      const user = getCurrentUser();
+      if (String(id) === String(user.id)) { showToast('不能操作自身'); loadManagedUsers(); return; }
+      const newRole = sel.value;
+      if (!['补货员', '叉车司机', '管理员'].includes(newRole)) { showToast('非法角色'); loadManagedUsers(); return; }
+      const { error } = await supabase.from('users').update({ role: newRole }).eq('id', id).eq('store_no', user.store_no);
+      if (error) { showToast('角色修改失败'); loadManagedUsers(); return; }
+      // 实时更新姓名下方的角色显示
+      const roleDiv = listEl.querySelector('[data-role-display="' + id + '"]');
+      if (roleDiv) roleDiv.textContent = newRole;
+      showToast('已切换为' + newRole);
+    });
+
+    // 重置密码 / 删除
+    listEl.addEventListener('click', async (e) => {
+      const resetBtn = e.target.closest('[data-reset]');
+      if (resetBtn) {
+        if (!hasPermission('approve')) { showToast('无操作权限'); return; }
+        const id = resetBtn.dataset.reset;
+        const user = getCurrentUser();
+        if (String(id) === String(user.id)) { showToast('不能操作自身'); return; }
+        const empId = resetBtn.dataset.emp;
+        // P2-20：用密码输入模态框替代明文 prompt()
+        const newPwd = await showPromptModal('重置密码', '请输入新密码（至少6位）', '新密码');
+        if (!newPwd) return;
+        if (newPwd.length < 6) { showToast('密码至少6位'); return; }
+        const hashed = await hashPassword(newPwd, empId);
+        const { error } = await supabase.from('users').update({ password: hashed }).eq('id', id).eq('store_no', user.store_no);
+        if (error) { showToast('重置失败'); return; }
+        showToast('密码已重置');
+        return;
+      }
+      const delBtn = e.target.closest('[data-delete]');
+      if (delBtn) {
+        if (!hasPermission('approve')) { showToast('无操作权限'); return; }
+        const id = delBtn.dataset.delete;
+        const user = getCurrentUser();
+        if (String(id) === String(user.id)) { showToast('不能操作自身'); return; }
+        const ok = await showModal('确认删除', '确定要删除该用户吗？此操作不可撤销。');
+        if (!ok) return;
+        const { error } = await supabase.from('users').delete().eq('id', id).eq('store_no', user.store_no);
+        if (error) { showToast('删除失败'); return; }
+        showToast('已删除');
+        loadManagedUsers();
+      }
+    });
+  })();
+  
+  // ==========================================
+  // 页面2：创建补货需求
+  // ==========================================
+  const goodsSearch = document.getElementById('goodsSearch');
+  const goodsPreview = document.getElementById('goodsPreview');
+  const goodsInfo = document.getElementById('goodsInfo');
+  const shelfSection = document.getElementById('shelfSection');
+  const shelfCheckboxes = document.getElementById('shelfCheckboxes');
+  const palletSection = document.getElementById('palletSection');
+  const palletCheckboxes = document.getElementById('palletCheckboxes');
+
+  // 品类→部门映射
+  const categoryDeptMap = {
+    2:'五金',7:'五金',8:'五金',13:'五金',24:'五金',25:'五金',26:'五金',47:'五金',54:'五金',59:'五金',67:'五金',83:'五金',88:'五金',93:'五金',94:'五金',
+    35:'干货',36:'干货',41:'干货',43:'干货',45:'干货',46:'干货',49:'干货',80:'干货',
+    1:'休食',40:'休食',51:'休食',52:'休食',53:'休食',58:'休食',
+    16:'酒柜',19:'酒柜',28:'酒柜',55:'酒柜',
+    9:'家居',10:'家居',11:'家居',18:'家居',21:'家居',22:'家居',23:'家居',32:'家居',33:'家居',68:'家居',95:'家居',
+    3:'电器',4:'电器',5:'电器',6:'电器',12:'电器',14:'电器',15:'电器',17:'电器',20:'电器',29:'电器',31:'电器',61:'电器',70:'电器',71:'电器',78:'电器',90:'电器'
+  };
+  /** 品类编号 → 部门名称映射（未配置返回 '其他'） */
+  function getDept(category) {
+    return categoryDeptMap[parseInt(category)] || '其他';
+  }
+  const noGoodsMsg = document.getElementById('noGoodsMsg');
+  const submitDemandBtn = document.getElementById('submitDemand');
+
+  // 查询按钮点击
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    const q = goodsSearch.value.trim();
+    if (q.length < 1) { resetGoodsForm(); return; }
+    searchGoods(q);
+  });
+
+  // 从创建页面跳转到补货清单
+  document.getElementById('gotoListBtn').addEventListener('click', () => {
+    switchToPage('list');
+    loadDemandList();
+  });
+
+  // 补货清单返回创建页面
+  document.getElementById('headerBackBtn').addEventListener('click', () => {
+    switchToPage('create');
+  });
+
+  // 回车也触发查询
+  goodsSearch.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const q = goodsSearch.value.trim();
+      if (q.length < 1) { resetGoodsForm(); return; }
+      searchGoods(q);
+    }
+  });
+
+  /**
+   * 按商品号查询本店商品及其货架/卡板库存，并渲染到创建补货页面
+   * @param {string} code 商品号
+   */
+  async function searchGoods(code) {
+    const user = getCurrentUser();
+    if (!user) { showToast('请先登录'); return; }
+    if (!checkOnlineOrToast()) return;
+    resetGoodsForm();
+    goodsPreview.style.display = 'block';
+    goodsInfo.innerHTML = '<div class="loading-text">搜索中</div>';
+
+    const { data, error } = await supabase.from('storage_location')
+      .select('*')
+      .eq('store_no', user.store_no)
+      .eq('goods_code', code);
+
+    if (error) {
+      goodsInfo.innerHTML = '<div style="color:#FF3B30">查询失败：' + error.message + '</div>';
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      goodsInfo.style.display = 'none';
+      noGoodsMsg.style.display = 'block';
+      noGoodsMsg.textContent = '该商品高货架无货';
+      return;
+    }
+
+    // 查询该商品已提交的补货需求，获取已选过的卡板
+    const { data: existingDemands } = await supabase.from('replenish_demand')
+      .select('shelf_code,pallet_code')
+      .eq('goods_code', code)
+      .eq('store_no', user.store_no)
+      .eq('status', 'pending');
+
+    const usedPallets = new Set();
+    if (existingDemands) {
+      existingDemands.forEach(d => {
+        // 仅对有有效卡板号的记录建立过滤键，避免空值互相误过滤
+        if (d.pallet_code) {
+          usedPallets.add((d.shelf_code || '') + '|' + d.pallet_code);
+        }
+      });
+    }
+
+    // 过滤掉已选过的卡板（仅过滤有卡板号的记录）
+    const filteredData = data.filter(row => {
+      if (!row.pallet_code) return true; // 无卡板号的记录不过滤
+      const key = (row.shelf_code || '') + '|' + row.pallet_code;
+      return !usedPallets.has(key);
+    });
+
+    if (filteredData.length === 0) {
+      goodsInfo.style.display = 'none';
+      noGoodsMsg.style.display = 'block';
+      noGoodsMsg.textContent = '该商品所有卡板已在补货清单中';
+      return;
+    }
+
+    window._currentStorageData = filteredData;
+    renderGoodsInfo(filteredData);
+    renderShelfCheckboxes(filteredData);
+    submitDemandBtn.style.display = hasPermission('create') ? 'block' : 'none';
+  }
+
+  function resetGoodsForm() {
+    goodsPreview.style.display = 'none';
+    goodsInfo.style.display = 'block';
+    goodsInfo.innerHTML = '';
+    shelfSection.style.display = 'none';
+    shelfCheckboxes.innerHTML = '';
+    palletSection.style.display = 'none';
+    palletCheckboxes.innerHTML = '';
+    noGoodsMsg.style.display = 'none';
+    submitDemandBtn.style.display = 'none';
+    window._currentStorageData = [];
+  }
+
+  function renderGoodsInfo(data) {
+    const first = data[0];
+    goodsInfo.style.display = 'block';
+    goodsInfo.innerHTML = `
+      <div class="info-row"><span>店号：</span><span>${escHtml(first.store_no || '-')}</span></div>
+      <div class="info-row"><span>品类：</span><span>${escHtml(first.category || '-')}</span></div>
+      <div class="info-row"><span>商品号：</span><span>${escHtml(first.goods_code || '-')}</span></div>
+      <div class="info-row"><span>商品名称：</span><span>${escHtml(first.goods_name || '-')}</span></div>
+    `;
+  }
+
+  function renderShelfCheckboxes(data) {
+    // 收集所有卡板，按现货数量排序
+    const palletList = [];
+    const seen = new Set();
+    data.forEach(row => {
+      const pc = row.pallet_code || '未知';
+      const sc = row.shelf_code || '未知';
+      const key = sc + '|' + pc;
+      if (!seen.has(key)) {
+        seen.add(key);
+        palletList.push({ pallet_code: pc, shelf_code: sc, spot_qty: row.spot_qty || 0 });
+      }
+    });
+    // 卡板排序：6512开头优先，再按数字升序；非6512按年份→月日→序号排序
+    palletList.sort((a, b) => {
+      const pa = a.pallet_code, pb = b.pallet_code;
+      const a6512 = pa.startsWith('6512'), b6512 = pb.startsWith('6512');
+      if (a6512 && !b6512) return -1;
+      if (!a6512 && b6512) return 1;
+      if (a6512 && b6512) return pa.localeCompare(pb, undefined, { numeric: true });
+      // 非非6512：头两位年份，中间四位月日，最后四位序号
+      const aYear = parseInt(pa.slice(0, 2)) || 0, bYear = parseInt(pb.slice(0, 2)) || 0;
+      if (aYear !== bYear) return aYear - bYear;
+      const aMD = parseInt(pa.slice(2, 6)) || 0, bMD = parseInt(pb.slice(2, 6)) || 0;
+      if (aMD !== bMD) return aMD - bMD;
+      const aSeq = parseInt(pa.slice(6)) || 0, bSeq = parseInt(pb.slice(6)) || 0;
+      return aSeq - bSeq;
+    });
+
+    if (palletList.length === 0) {
+      shelfSection.style.display = 'none';
+      return;
+    }
+
+    shelfSection.style.display = 'block';
+    let html = '';
+    for (let i = 0; i < palletList.length; i++) {
+      const item = palletList[i];
+      const checked = i === 0 ? ' checked' : '';
+      html += `
+        <label class="checkbox-label pallet-sub">
+          <input type="checkbox" value="${escHtml(item.pallet_code)}" data-shelf="${escHtml(item.shelf_code)}"${checked} onchange="window._onPalletChange()">
+          <span style="display:flex;flex-direction:column;gap:2px"><span>卡板 ${escHtml(item.pallet_code)} | 现货：${escHtml(String(item.spot_qty))}</span><span style="color:#999;font-size:12px">货架${escHtml(item.shelf_code)}</span></span>
+        </label>`;
+    }
+    shelfCheckboxes.innerHTML = html;
+    palletCheckboxes.innerHTML = '';
+    palletSection.style.display = 'none';
+
+    window._onPalletChange();
+  }
+
+  window._onShelfChange = () => {
+    // 保留空函数以防报错，逻辑已移入 renderShelfCheckboxes
+  };
+
+  window._onPalletChange = () => {
+    const anyChecked = shelfCheckboxes.querySelectorAll('input[type="checkbox"]:checked').length > 0;
+    submitDemandBtn.disabled = !anyChecked;
+  };
+
+  submitDemandBtn.addEventListener('click', async () => {
+    if (!hasPermission('create')) { showToast('无操作权限'); return; }
+    const data = window._currentStorageData;
+    if (!data || data.length === 0) { showToast('请先搜索商品'); return; }
+    if (!checkOnlineOrToast()) return;
+
+    const selectedPalletCbs = shelfCheckboxes.querySelectorAll('input[type="checkbox"]:checked');
+    if (selectedPalletCbs.length === 0) { showToast('请至少选择一个卡板'); return; }
+
+    const first = data[0];
+    const records = [];
+    selectedPalletCbs.forEach(cb => {
+      const palletCode = cb.value;
+      const shelfCode = cb.dataset.shelf;
+      const row = data.find(r =>
+        (r.shelf_code || '未知') === shelfCode && (r.pallet_code || '未知') === palletCode
+      );
+      records.push({
+        store_no: getCurrentUser().store_no,
+        category: first.category || '',
+        goods_code: first.goods_code || '',
+        goods_name: first.goods_name || '',
+        shelf_code: shelfCode,
+        pallet_code: palletCode,
+        spot_qty: row ? (row.spot_qty || 0) : 0,
+        status: 'pending'
+      });
+    });
+
+    submitDemandBtn.disabled = true;
+    submitDemandBtn.textContent = '提交中...';
+    try {
+      // INSERT 未知 DB 生成 id，无需按 id 去重；Realtime INSERT 处理已用 some() 防重
+      const { error } = await supabase.from('replenish_demand').insert(records);
+      if (error) {
+        showToast('提交失败：' + error.message);
+      } else {
+        showToast('补货需求已创建，共 ' + records.length + ' 条');
+        goodsSearch.value = '';
+        resetGoodsForm();
+      }
+    } catch (e) {
+      showToast('提交失败：' + e.message);
+    } finally {
+      submitDemandBtn.disabled = false;
+      submitDemandBtn.textContent = '提交补货需求';
+    }
+  });
+
+  // ==========================================
+  // 页面2-1：补货清单
+  // ==========================================
+  let allDemandData = [];
+  let currentDept = 'all';
+
+  const depts = ['五金','电器','家居','干货','休食','酒柜'];
+
+  function renderDeptNav() {
+    const nav = document.getElementById('deptNav');
+    const counts = {};
+    allDemandData.forEach(r => {
+      const dept = getDept(r.category);
+      counts[dept] = (counts[dept] || 0) + 1;
+    });
+    let html = `<span class="dept-tab${currentDept === 'all' ? ' active' : ''}" data-dept="all">全部(${allDemandData.length})</span>`;
+    depts.forEach(d => {
+      html += `<span class="dept-tab${currentDept === d ? ' active' : ''}" data-dept="${d}">${d}(${counts[d] || 0})</span>`;
+    });
+    nav.innerHTML = html;
+  }
+
+  // 部门导航点击
+  document.getElementById('deptNav').addEventListener('click', (e) => {
+    const tab = e.target.closest('.dept-tab');
+    if (!tab) return;
+    document.querySelectorAll('.dept-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentDept = tab.dataset.dept;
+    renderDemandList();
+  });
+
+  /** 从 Supabase 拉取本店全部 pending 补货需求并触发渲染 */
+  async function loadDemandList() {
+    const container = document.getElementById('demandListContainer');
+    container.innerHTML = '<div class="loading-text">加载中</div>';
+
+    const { data, error } = await supabase.from('replenish_demand')
+      .select('*')
+      .eq('store_no', getCurrentUser().store_no)
+      .eq('status', 'pending')
+      .order('category')
+      .order('goods_name');
+
+    if (error) {
+      container.innerHTML = '<div class="empty">加载失败：' + error.message + '</div>';
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      allDemandData = [];
+      renderDeptNav();
+      container.innerHTML = '<div class="empty">暂无补货需求</div>';
+      return;
+    }
+
+    allDemandData = data;
+    renderDemandList();
+  }
+
+  let demandSearchKeyword = '';
+
+  document.getElementById('demandSearchBtn').addEventListener('click', () => {
+    demandSearchKeyword = document.getElementById('demandSearchInput').value.trim();
+    renderDemandList();
+  });
+
+  document.getElementById('demandSearchInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      demandSearchKeyword = e.target.value.trim();
+      renderDemandList();
+    }
+  });
+
+  /**
+   * 渲染补货清单表格：应用部门筛选 + 商品号搜索关键字
+   * 依赖全局：allDemandData, currentDept, demandSearchKeyword
+   */
+  function renderDemandList() {
+    renderDeptNav();
+    const container = document.getElementById('demandListContainer');
+    const batchBar = document.getElementById('demandBatchBar');
+    let data = currentDept === 'all' ? allDemandData : allDemandData.filter(r => getDept(r.category) === currentDept);
+    if (demandSearchKeyword) {
+      data = data.filter(r => String(r.goods_code || '').includes(demandSearchKeyword));
+    }
+
+    if (data.length === 0) {
+      container.innerHTML = '<div class="empty">暂无补货需求</div>';
+      batchBar.style.display = 'none';
+      return;
+    }
+
+    if (!hasPermission('list')) {
+      batchBar.style.display = 'none';
+    } else {
+      batchBar.style.cssText = 'display:flex;align-items:center;gap:8px;padding:0 0 8px;flex-wrap:nowrap';
+    }
+    document.getElementById('selectAllDemand').checked = false;
+    updateSelectedCount();
+
+    let html = '<div class="demand-table-wrap"><table class="data-table" style="white-space:nowrap;width:auto"><thead><tr>';
+    html += '<th></th><th>部门</th><th>品类</th><th>商品号</th><th>商品名称</th><th>货架号</th><th>卡板</th><th>现货</th><th>操作</th>';
+    html += '</tr></thead><tbody>';
+
+    data.forEach(row => {
+      html += `<tr>
+        <td><input type="checkbox" class="demand-check" data-id="${row.id}"></td>
+        <td>${escHtml(getDept(row.category))}</td>
+        <td>${esc(row.category)}</td>
+        <td>${esc(row.goods_code)}</td>
+        <td>${esc(row.goods_name)}</td>
+        <td>${esc(row.shelf_code)}</td>
+        <td>${esc(row.pallet_code)}</td>
+        <td>${esc(row.spot_qty)}</td>
+        <td>
+          <div class="btn-group">
+            <button class="btn btn-primary btn-sm add-btn" data-code="${escHtml(row.goods_code || '')}">增加</button>
+            <button class="btn btn-danger btn-sm del-btn perm-list" data-id="${row.id}">删除</button>
+          </div>
+        </td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  }
+
+  // 补货清单事件委托（仅绑定一次，避免每次重渲染重复绑定）
+  (function setupDemandListDelegation() {
+    const container = document.getElementById('demandListContainer');
+
+    // checkbox 变化：更新全选状态与计数
+    container.addEventListener('change', (e) => {
+      const cb = e.target.closest('.demand-check');
+      if (!cb) return;
+      const all = container.querySelectorAll('.demand-check');
+      const checkedCount = container.querySelectorAll('.demand-check:checked').length;
+      document.getElementById('selectAllDemand').checked = all.length > 0 && checkedCount === all.length;
+      updateSelectedCount();
+    });
+
+    // 点击：增加/删除按钮
+    container.addEventListener('click', async (e) => {
+      const addBtn = e.target.closest('.add-btn');
+      if (addBtn) {
+        switchToPage('create');
+        goodsSearch.value = addBtn.dataset.code;
+        searchGoods(addBtn.dataset.code);
+        return;
+      }
+      const delBtn = e.target.closest('.del-btn');
+      if (delBtn) {
+        if (!hasPermission('list')) { showToast('无操作权限'); return; }
+        const id = delBtn.dataset.id;
+        const ok = await showModal('确认删除', '确定要删除此条补货记录吗？');
+        if (!ok) return;
+        // 乐观更新：先从本地移除该行并立刻重新渲染，用户无需等待网络
+        const backupData = allDemandData;
+        allDemandData = allDemandData.filter(r => String(r.id) !== id);
+        renderDemandList();
+        notifyLocalAction(id);
+        const { error } = await supabase.from('replenish_demand').delete().eq('id', id).eq('store_no', getCurrentUser().store_no);
+        if (error) {
+          // 删除失败：恢复数据并重新渲染
+          allDemandData = backupData;
+          renderDemandList();
+          showToast('删除失败：' + error.message);
+        }
+      }
+    });
+  })();
+
+  function updateSelectedCount() {
+    const checked = document.querySelectorAll('#demandListContainer .demand-check:checked').length;
+    document.getElementById('selectedCount').textContent = checked > 0 ? `已选${checked}条` : '';
+  }
+
+  // 全选checkbox（顶部栏）
+  document.getElementById('selectAllDemand').addEventListener('change', (e) => {
+    const checked = e.target.checked;
+    document.querySelectorAll('#demandListContainer .demand-check').forEach(cb => { cb.checked = checked; });
+    updateSelectedCount();
+  });
+
+  // 批量删除
+  document.getElementById('batchDeleteBtn').addEventListener('click', async () => {
+    if (!hasPermission('list')) { showToast('无操作权限'); return; }
+    const checkedIds = [...document.querySelectorAll('#demandListContainer .demand-check:checked')].map(cb => cb.dataset.id);
+    if (checkedIds.length === 0) {
+      showToast('请先选择要删除的记录');
+      return;
+    }
+    const ok = await showModal('确认批量删除', `确定要删除选中的 ${checkedIds.length} 条补货记录吗？`);
+    if (!ok) return;
+    // 乐观更新：先从本地移除这些行并立刻重新渲染，用户无需等待网络
+    const backupData = allDemandData;
+    const idSet = new Set(checkedIds);
+    allDemandData = allDemandData.filter(r => !idSet.has(String(r.id)));
+    renderDemandList();
+    notifyLocalAction(checkedIds);
+    const { error } = await supabase.from('replenish_demand').delete().in('id', checkedIds).eq('store_no', getCurrentUser().store_no);
+    if (error) {
+      // 删除失败：恢复数据并重新渲染
+      allDemandData = backupData;
+      renderDemandList();
+      showToast('批量删除失败：' + error.message);
+    } else {
+      showToast(`已删除 ${checkedIds.length} 条记录`);
+    }
+  });
+
+  // ==========================================
+  // 页面3：司机下货
+  // ==========================================
+  let currentDriverZone = 'all';
+  let allDriverData = [];
+  let allUnloadedData = [];
+  let shelfRouteMap = {};  // shelf_code → route_order 映射
+  let shelfChannelMap = {};  // shelf_code → channel_position 映射
+  let shelfSideMap = {};  // shelf_code → 'left'|'right' 映射
+  let allShelfRoutes = [];  // shelf_routes 表原始行数据
+  let customRoutes = [];  // 用户创建的自定义路线 [{id,name,startOrder,endOrder}]
+
+  /**
+   * 从货架号提取通道号，例：3F-AH29-08 → A29
+   * @param {string} shelf 货架号
+   * @returns {string}
+   */
+  function getChannel(shelf) {
+    const s = String(shelf || '').toUpperCase();
+    const m = s.match(/^\dF-([A-Z])[A-Z]+(\d+)-/i);
+    return m ? m[1] + m[2] : s;
+  }
+
+  /** 通道号自然排序（字母前缀 + 数字，如 A9 < A10 < B2） */
+  function sortChannels(a, b) {
+    const ma = a.match(/^([A-Z]+)(\d+)$/i);
+    const mb = b.match(/^([A-Z]+)(\d+)$/i);
+    if (ma && mb) {
+      if (ma[1] !== mb[1]) return ma[1].localeCompare(mb[1]);
+      return parseInt(ma[2]) - parseInt(mb[2]);
+    }
+    return a.localeCompare(b);
+  }
+
+  function renderDriverDeptNav() {
+    const nav = document.getElementById('driverDeptNav');
+    let html = `<span class="dept-tab${currentDriverZone === 'all' ? ' active' : ''}" data-zone="all">全部(${allDriverData.length})</span>`;
+    // 已创建的自定义路线（作为同级菜单显示在"自定义路线"入口前面）
+    customRoutes.forEach(route => {
+      const cnt = countByRouteRange(route.startOrder, route.endOrder);
+      const isActive = currentDriverZone === 'custom-route-' + route.id;
+      html += `<span class="dept-tab${isActive ? ' active' : ''}" data-zone="custom-route-${escHtml(route.id)}">${escHtml(route.name)}(${cnt})</span>`;
+    });
+    // 自定义路线入口：仅管理员可见，点击后显示创建/管理表单
+    if (hasPermission('customRoute')) {
+      html += `<span class="dept-tab${currentDriverZone === 'custom-route' ? ' active' : ''}" data-zone="custom-route">自定义路线</span>`;
+    }
+    html += `<span class="dept-tab${currentDriverZone === '已下货' ? ' active' : ''}" data-zone="已下货">已下货(${allUnloadedData.length})</span>`;
+    nav.innerHTML = html;
+  }
+
+  /** 统计 route_order 在 [startOrder, endOrder] 区间内的待下货数量 */
+  function countByRouteRange(startOrder, endOrder) {
+    return allDriverData.filter(r => {
+      const ro = shelfRouteMap[r.shelf_code];
+      return ro != null && ro >= startOrder && ro <= endOrder;
+    }).length;
+  }
+
+  document.getElementById('driverDeptNav').addEventListener('click', (e) => {
+    const tab = e.target.closest('.dept-tab');
+    if (!tab) return;
+    document.querySelectorAll('#driverDeptNav .dept-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentDriverZone = tab.dataset.zone;
+    if (currentDriverZone === '已下货') {
+      renderUnloadedList();
+    } else {
+      renderDriverList();
+    }
+  });
+
+  // ==================== 自定义路线 CRUD（Supabase 跨设备同步） ====================
+  /** 从 Supabase 加载当前店的自定义路线（跨设备/跨管理员共享） */
+  async function loadCustomRoutes() {
+    const user = getCurrentUser();
+    if (!user) { customRoutes = []; return; }
+    const { data, error } = await supabase.from('custom_routes')
+      .select('id,name,start_order,end_order,sort_order')
+      .eq('store_no', user.store_no)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true });
+    if (error) { console.error('加载自定义路线失败:', error.message); return; }
+    customRoutes = (data || []).map(r => ({
+      id: r.id,
+      name: r.name,
+      startOrder: r.start_order,
+      endOrder: r.end_order,
+      sortOrder: r.sort_order
+    }));
+  }
+
+  // Realtime 重载：防抖合并短时间内的多次变更
+  let customRouteReloadTimer = null;
+  function scheduleCustomRouteReload() {
+    clearTimeout(customRouteReloadTimer);
+    customRouteReloadTimer = setTimeout(handleCustomRouteRealtime, 300);
+  }
+  async function handleCustomRouteRealtime() {
+    if (currentPageName !== 'driver') return;
+    await loadCustomRoutes();
+    renderDriverDeptNav();
+    if (currentDriverZone === '已下货') {
+      renderUnloadedList();
+    } else if (currentDriverZone === 'custom-route') {
+      // 管理页：表单有未保存输入或处于编辑模式时保留，避免打断
+      if (!isCustomRouteFormActive()) renderCustomRouteForm(null);
+    } else {
+      renderDriverList();
+    }
+  }
+  function isCustomRouteFormActive() {
+    const nameInput = document.getElementById('customRouteName');
+    if (nameInput && nameInput.value.trim()) return true;
+    const submitBtn = document.getElementById('customRouteSubmit');
+    if (submitBtn && submitBtn.textContent.trim() === '保存') return true;
+    return false;
+  }
+
+  // 手机端触摸拖拽排序（手指跟随 + 其他行让位动画，丝滑）
+  let routeTouchDrag = null;
+  function initRouteTouchDrag(row, idx, listEl, editId) {
+    const handle = row.querySelector('.drag-handle');
+    if (!handle) return;
+    handle.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      if (!hasPermission('customRoute') || !checkOnlineOrToast()) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      const rect = row.getBoundingClientRect();
+      const rows = Array.from(listEl.querySelectorAll('[data-idx]'));
+      routeTouchDrag = {
+        idx, rowEl: row, listEl, editId,
+        startY: t.clientY,
+        rowHeight: rect.height,
+        currentIdx: idx,
+        rows,
+        originalCenters: rows.map(r => { const rc = r.getBoundingClientRect(); return rc.top + rc.height / 2; })
+      };
+      row.style.zIndex = '100';
+      row.style.boxShadow = '0 4px 14px rgba(0,0,0,0.18)';
+      row.style.background = 'var(--ios-card)';
+      row.style.transition = 'none';
+      row.style.willChange = 'transform';
+    }, { passive: false });
+
+    handle.addEventListener('touchmove', (e) => {
+      if (!routeTouchDrag || routeTouchDrag.rowEl !== row) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      const dy = t.clientY - routeTouchDrag.startY;
+      row.style.transform = 'translateY(' + dy + 'px)';
+      // 用原始中心点计算目标位置，避免受 transform 影响
+      let targetIdx = routeTouchDrag.idx;
+      let minDist = Infinity;
+      for (let i = 0; i < routeTouchDrag.rows.length; i++) {
+        if (routeTouchDrag.rows[i] === row) continue;
+        const c = routeTouchDrag.originalCenters[i];
+        const d = Math.abs(t.clientY - c);
+        if (d < minDist) { minDist = d; targetIdx = parseInt(routeTouchDrag.rows[i].dataset.idx); }
+      }
+      if (targetIdx !== routeTouchDrag.currentIdx) {
+        routeTouchDrag.currentIdx = targetIdx;
+        // 平移其他行让出位置
+        routeTouchDrag.rows.forEach(r => {
+          if (r === row) return;
+          const rIdx = parseInt(r.dataset.idx);
+          let shift = 0;
+          if (routeTouchDrag.currentIdx > routeTouchDrag.idx) {
+            if (rIdx > routeTouchDrag.idx && rIdx <= routeTouchDrag.currentIdx) shift = -routeTouchDrag.rowHeight;
+          } else if (routeTouchDrag.currentIdx < routeTouchDrag.idx) {
+            if (rIdx >= routeTouchDrag.currentIdx && rIdx < routeTouchDrag.idx) shift = routeTouchDrag.rowHeight;
+          }
+          r.style.transition = 'transform 0.18s ease';
+          r.style.transform = 'translateY(' + shift + 'px)';
+        });
+      }
+    }, { passive: false });
+
+    const finishTouch = () => {
+      if (!routeTouchDrag || routeTouchDrag.rowEl !== row) return;
+      const from = routeTouchDrag.idx, to = routeTouchDrag.currentIdx;
+      const editIdSaved = routeTouchDrag.editId;
+      const rows = routeTouchDrag.rows;
+      routeTouchDrag = null;
+      rows.forEach(r => { r.style.transition = ''; r.style.transform = ''; r.style.zIndex = ''; r.style.boxShadow = ''; r.style.background = ''; r.style.willChange = ''; });
+      if (to !== from) {
+        const snapshot = customRoutes.slice();
+        const [moved] = customRoutes.splice(from, 1);
+        customRoutes.splice(to, 0, moved);
+        renderDriverDeptNav();
+        renderCustomRouteForm(editIdSaved);
+        // 持久化排序到 Supabase
+        (async () => {
+          const user = getCurrentUser();
+          try {
+            // 并发更新所有行的 sort_order，提升速度
+            const results = await Promise.all(customRoutes.map((r, i) =>
+              supabase.from('custom_routes').update({ sort_order: i })
+                .eq('id', r.id).eq('store_no', user.store_no)
+            ));
+            const hasError = results.some(r => r.error);
+            if (hasError) {
+              // 失败时全量重拉服务端数据，避免本地与服务端排序不一致
+              await loadCustomRoutes();
+              renderDriverDeptNav();
+              renderCustomRouteForm(editIdSaved);
+              showToast('排序保存失败');
+            }
+          } catch (e) {
+            // 网络异常：全量重拉对齐服务端
+            await loadCustomRoutes();
+            renderDriverDeptNav();
+            renderCustomRouteForm(editIdSaved);
+            showToast('排序保存失败');
+          }
+        })();
+      }
+    };
+    handle.addEventListener('touchend', finishTouch);
+    handle.addEventListener('touchcancel', () => {
+      if (!routeTouchDrag || routeTouchDrag.rowEl !== row) return;
+      routeTouchDrag.rows.forEach(r => { r.style.transition = ''; r.style.transform = ''; r.style.zIndex = ''; r.style.boxShadow = ''; r.style.background = ''; r.style.willChange = ''; });
+      routeTouchDrag = null;
+    });
+  }
+
+  /**
+   * 渲染自定义路线管理页：顶部为创建/编辑表单，下方列出已创建路线（点击可修改/删除）
+   * @param {string|null} editId 传入路线 id 时为编辑模式，null 为新建模式
+   */
+  function renderCustomRouteForm(editId) {
+    // 仅管理员可管理自定义路线
+    if (!hasPermission('customRoute')) {
+      currentDriverZone = 'all';
+      renderDriverList();
+      return;
+    }
+    const container = document.getElementById('driverContainer');
+    const editingRoute = editId ? customRoutes.find(r => r.id === editId) : null;
+    const isEdit = !!editingRoute;
+    // 按 route_order 分组 shelf_routes 原始行
+    const orderByRoute = {};
+    allShelfRoutes.forEach(r => {
+      const ro = r.route_order;
+      if (ro == null) return;
+      if (!orderByRoute[ro]) orderByRoute[ro] = [];
+      orderByRoute[ro].push(r);
+    });
+    const sortedOrders = Object.keys(orderByRoute).map(Number).sort((a, b) => a - b);
+    // 构建下拉选项：route_order 值 + 各列对应值
+    const buildOptions = (selectedVal) => {
+      if (sortedOrders.length === 0) return '<option value="">暂无路线数据</option>';
+      return sortedOrders.map(ro => {
+        const rows = orderByRoute[ro];
+        const channels = rows.map(r => r.channel_position).filter(Boolean).join(',');
+        const shelfPairs = rows.map(r => `${r.left_shelf_code || '-'}↔${r.right_shelf_code || '-'}`).join('; ');
+        const label = `${ro} ｜ 通道:${channels} ｜ ${shelfPairs}`;
+        return `<option value="${ro}"${selectedVal === ro ? ' selected' : ''}>${escHtml(label)}</option>`;
+      }).join('');
+    };
+    const defaultStart = sortedOrders[0] != null ? sortedOrders[0] : '';
+    const defaultEnd = sortedOrders[sortedOrders.length - 1] != null ? sortedOrders[sortedOrders.length - 1] : '';
+    const selStart = isEdit ? editingRoute.startOrder : defaultStart;
+    const selEnd = isEdit ? editingRoute.endOrder : defaultEnd;
+    // 已创建路线列表
+    let listHtml = '';
+    if (customRoutes.length === 0) {
+      listHtml = '<div class="list-tip">暂无已创建的路线</div>';
+    } else {
+      listHtml = customRoutes.map((route, idx) => {
+        const cnt = countByRouteRange(route.startOrder, route.endOrder);
+        const active = isEdit && editingRoute.id === route.id;
+        return `<div class="user-row" data-idx="${idx}" draggable="true" style="cursor:grab${active ? ';background:rgba(0,122,255,0.08)' : ''}">
+          <span class="drag-handle" style="color:var(--ios-text3);font-size:28px;line-height:1;display:inline-flex;align-items:center;transform:scaleX(1.6) scaleY(1.4);transform-origin:center;cursor:grab;user-select:none;margin-right:12px;touch-action:none">≡</span>
+          <div class="user-info">
+            <div class="user-name">${escHtml(route.name)}（${cnt}）</div>
+            <div class="user-sub">起点 ${route.startOrder} → 终点 ${route.endOrder}</div>
+          </div>
+          <div class="user-actions"><span class="custom-route-edit" data-edit-id="${escHtml(route.id)}" style="color:var(--ios-blue);font-size:16px;font-weight:700;cursor:pointer">修改</span></div>
+        </div>`;
+      }).join('');
+    }
+    container.innerHTML = `
+      <div style="padding:14px;background:var(--ios-card);border-radius:10px;margin:10px 0">
+        <h4 style="margin:0 0 12px;text-align:center">${isEdit ? '修改路线' : '新建路线'}</h4>
+        <div class="form-group">
+          <label>路线名称</label>
+          <input type="text" id="customRouteName" placeholder="请输入路线名称" maxlength="20" value="${isEdit ? escHtml(editingRoute.name) : ''}">
+        </div>
+        <div class="form-group">
+          <label>路线起点</label>
+          <select id="customRouteStart">${buildOptions(selStart)}</select>
+        </div>
+        <div class="form-group">
+          <label>路线终点</label>
+          <select id="customRouteEnd">${buildOptions(selEnd)}</select>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn btn-primary" id="customRouteSubmit" style="flex:1">${isEdit ? '保存' : '创建'}</button>
+          ${isEdit ? '<button class="btn btn-danger" id="customRouteDelete" style="flex:1">删除</button>' : ''}
+          <button class="btn btn-outline" id="customRouteCancel" style="flex:1">取消</button>
+        </div>
+      </div>
+      <div style="padding:0 4px">
+        <div class="section-title">已创建的路线（可拖拽排序）</div>
+        <div id="customRouteList">${listHtml}</div>
+      </div>`;
+    // 取消：编辑模式回到新建模式，新建模式返回全部
+    document.getElementById('customRouteCancel').onclick = () => {
+      if (isEdit) {
+        renderCustomRouteForm(null);
+      } else {
+        currentDriverZone = 'all';
+        renderDriverList();
+      }
+    };
+    // 提交（创建/保存）
+    document.getElementById('customRouteSubmit').onclick = async () => {
+      if (!hasPermission('customRoute')) { showToast('无操作权限'); return; }
+      if (!checkOnlineOrToast()) return;
+      const name = document.getElementById('customRouteName').value.trim();
+      if (!name) { showToast('请输入路线名称'); return; }
+      if (name.length > 20) { showToast('路线名称不能超过20个字符'); return; }
+      if (sortedOrders.length === 0) { showToast('暂无路线数据，无法创建'); return; }
+      const startOrder = parseInt(document.getElementById('customRouteStart').value);
+      const endOrder = parseInt(document.getElementById('customRouteEnd').value);
+      if (isNaN(startOrder) || isNaN(endOrder)) { showToast('请选择起点和终点'); return; }
+      const s = Math.min(startOrder, endOrder);
+      const e = Math.max(startOrder, endOrder);
+      const user = getCurrentUser();
+      if (isEdit) {
+        const oldName = editingRoute.name, oldS = editingRoute.startOrder, oldE = editingRoute.endOrder;
+        editingRoute.name = name; editingRoute.startOrder = s; editingRoute.endOrder = e;
+        renderDriverDeptNav(); renderCustomRouteForm(null);
+        const { error } = await supabase.from('custom_routes').update({ name, start_order: s, end_order: e })
+          .eq('id', editingRoute.id).eq('store_no', user.store_no);
+        if (error) {
+          editingRoute.name = oldName; editingRoute.startOrder = oldS; editingRoute.endOrder = oldE;
+          renderDriverDeptNav(); renderCustomRouteForm(editingRoute.id);
+          showToast('保存失败：' + error.message);
+        } else {
+          showToast('已保存');
+        }
+      } else {
+        const route = { id: 'r' + Date.now() + Math.random().toString(36).slice(2, 6), name, startOrder: s, endOrder: e, sortOrder: customRoutes.length };
+        customRoutes.push(route);
+        renderDriverDeptNav(); renderCustomRouteForm(null);
+        const { error } = await supabase.from('custom_routes').insert({
+          id: route.id, store_no: user.store_no, name, start_order: s, end_order: e,
+          sort_order: route.sortOrder, created_by: user.emp_id || user.name
+        });
+        if (error) {
+          customRoutes = customRoutes.filter(r => r.id !== route.id);
+          renderDriverDeptNav(); renderCustomRouteForm(null);
+          showToast('创建失败：' + error.message);
+        } else {
+          showToast('已创建');
+        }
+      }
+    };
+    // 删除（仅编辑模式）
+    if (isEdit) {
+      document.getElementById('customRouteDelete').onclick = async () => {
+        if (!hasPermission('customRoute')) { showToast('无操作权限'); return; }
+        if (!checkOnlineOrToast()) return;
+        if (!confirm('确定删除路线「' + editingRoute.name + '」？')) return;
+        const user = getCurrentUser();
+        const removed = editingRoute;
+        const removedIdx = customRoutes.findIndex(r => r.id === removed.id);
+        customRoutes = customRoutes.filter(r => r.id !== removed.id);
+        renderDriverDeptNav(); renderCustomRouteForm(null);
+        const { error } = await supabase.from('custom_routes').delete()
+          .eq('id', removed.id).eq('store_no', user.store_no);
+        if (error) {
+          customRoutes.splice(removedIdx, 0, removed);
+          renderDriverDeptNav(); renderCustomRouteForm(removed.id);
+          showToast('删除失败：' + error.message);
+        } else {
+          showToast('已删除');
+        }
+      };
+    }
+    // 仅点击「修改」二字进入编辑
+    container.querySelectorAll('.custom-route-edit').forEach(btn => {
+      btn.onclick = (e) => { e.stopPropagation(); renderCustomRouteForm(btn.dataset.editId); };
+    });
+    // 拖拽排序已创建路线
+    const listEl = document.getElementById('customRouteList');
+    if (listEl) {
+      // 手机端触摸丝滑拖拽
+      listEl.querySelectorAll('.user-row').forEach(row => {
+        initRouteTouchDrag(row, parseInt(row.dataset.idx), listEl, editId);
+      });
+      let dragSrcIdx = null;
+      listEl.addEventListener('dragstart', (e) => {
+        if (e.target.closest('.custom-route-edit')) { e.preventDefault(); return; }
+        const row = e.target.closest('[data-idx]');
+        if (!row) return;
+        dragSrcIdx = parseInt(row.dataset.idx);
+        row.style.opacity = '0.4';
+      });
+      listEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const row = e.target.closest('[data-idx]');
+        if (!row || dragSrcIdx == null) return;
+        listEl.querySelectorAll('[data-idx]').forEach(r => r.style.borderTop = '');
+        if (parseInt(row.dataset.idx) !== dragSrcIdx) row.style.borderTop = '2px solid var(--ios-blue)';
+      });
+      listEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const row = e.target.closest('[data-idx]');
+        if (row && dragSrcIdx != null) {
+          const targetIdx = parseInt(row.dataset.idx);
+          if (dragSrcIdx !== targetIdx && hasPermission('customRoute') && checkOnlineOrToast()) {
+            const snapshot = customRoutes.slice();
+            const [moved] = customRoutes.splice(dragSrcIdx, 1);
+            customRoutes.splice(targetIdx, 0, moved);
+            renderDriverDeptNav();
+            // 异步持久化新顺序到 Supabase
+            (async () => {
+              const user = getCurrentUser();
+              try {
+                const results = await Promise.all(customRoutes.map((r, i) =>
+                  supabase.from('custom_routes').update({ sort_order: i })
+                    .eq('id', r.id).eq('store_no', user.store_no)
+                ));
+                const hasError = results.some(r => r.error);
+                if (hasError) {
+                  await loadCustomRoutes();
+                  renderDriverDeptNav();
+                  renderCustomRouteForm(editId);
+                  showToast('排序保存失败');
+                }
+              } catch (e) {
+                await loadCustomRoutes();
+                renderDriverDeptNav();
+                renderCustomRouteForm(editId);
+                showToast('排序保存失败');
+              }
+            })();
+          }
+        }
+        dragSrcIdx = null;
+        renderCustomRouteForm(editId);
+      });
+      listEl.addEventListener('dragend', () => {
+        dragSrcIdx = null;
+        listEl.querySelectorAll('[data-idx]').forEach(r => { r.style.opacity = ''; r.style.borderTop = ''; });
+      });
+    }
+  }
+
+  /**
+   * 渲染司机下货页：根据 currentDriverZone 过滤数据
+   * 支持全部 / 自定义路线 / 已下货 视图
+   * 按通道 → 货架两级分组，路线视图按 route_order 排序
+   */
+  function renderDriverList() {
+    renderDriverDeptNav();
+    const container = document.getElementById('driverContainer');
+
+    // 自定义路线入口：显示创建表单
+    if (currentDriverZone === 'custom-route') {
+      renderCustomRouteForm();
+      return;
+    }
+
+    let data = allDriverData;
+
+    // 路线过滤
+    if (currentDriverZone.indexOf('custom-route-') === 0) {
+      // 已创建的自定义路线：按 route_order 区间 [startOrder, endOrder] 筛选
+      const routeId = currentDriverZone.slice('custom-route-'.length);
+      const route = customRoutes.find(r => r.id === routeId);
+      data = route ? allDriverData.filter(r => {
+        const ro = shelfRouteMap[r.shelf_code];
+        return ro != null && ro >= route.startOrder && ro <= route.endOrder;
+      }) : [];
+    }
+
+    if (data.length === 0) {
+      container.innerHTML = '<div class="empty">暂无待下货任务</div>';
+      return;
+    }
+
+    const isRouteView = currentDriverZone.indexOf('custom-route-') === 0;
+    let html = '';
+
+    if (isRouteView) {
+      // 路线视图：通道 → 货架 两级分组，按 route_order 排序
+      const channelMap = new Map();
+      data.forEach(row => {
+        const ch = shelfChannelMap[row.shelf_code] || getChannel(row.shelf_code);
+        const sc = row.shelf_code || '未知';
+        const ro = shelfRouteMap[row.shelf_code] || 0;
+        if (!channelMap.has(ch)) channelMap.set(ch, { routeOrder: ro, shelves: new Map() });
+        const chData = channelMap.get(ch);
+        if (ro < chData.routeOrder) chData.routeOrder = ro;
+        if (!chData.shelves.has(sc)) chData.shelves.set(sc, []);
+        chData.shelves.get(sc).push(row);
+      });
+      // 按 route_order 排序通道
+      const sortedChannels = [...channelMap.keys()].sort((a, b) => channelMap.get(a).routeOrder - channelMap.get(b).routeOrder);
+      for (const ch of sortedChannels) {
+        const chData = channelMap.get(ch);
+        let chCount = 0;
+        chData.shelves.forEach(items => chCount += items.length);
+        html += `<div class="group-card compact" data-channel="${escHtml(ch)}">
+          <div class="group-title channel-title" onclick="const ct=this.nextElementSibling;ct.style.display=ct.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=ct.style.display==='none'?'▶':'▼'">通道 ${escHtml(ch)}（${chCount}个卡板）<span class="arrow">▶</span></div>
+          <div style="display:none">`;
+        // 通道内货架按 route_order 升序，同序先左后右
+        const sortedShelves = [...chData.shelves.keys()].sort((a, b) => {
+          const roA = shelfRouteMap[a] || 0, roB = shelfRouteMap[b] || 0;
+          if (roA !== roB) return roA - roB;
+          return (shelfSideMap[a] === 'left' ? 0 : 1) - (shelfSideMap[b] === 'left' ? 0 : 1);
+        });
+        for (const sc of sortedShelves) {
+          const items = chData.shelves.get(sc);
+          const scDisplay = escHtml(sc).replace(/(\d{2})$/, '<span style="color:#FF3B30">$1</span>');
+          html += `<div class="shelf-group" data-shelf="${escHtml(sc)}">`;
+          html += `<div style="margin:8px 0 4px 8px;padding:4px 8px;background:rgba(255,149,0,0.08);border-left:3px solid #FF9500;border-radius:4px;font-size:15.5px;color:var(--ios-text);font-weight:700">货架号：${scDisplay}</div>`;
+          items.forEach(item => {
+            html += `
+          <div class="task-item" style="margin-left:8px">
+            <div class="task-info">
+              <div class="task-name">卡板 ${escHtml(String(item.pallet_code || '-').slice(-4))} | 现货：${esc(item.spot_qty)}</div>
+              <div class="task-detail">${esc(item.goods_name)} (${esc(item.goods_code)})</div>
+            </div>
+            <button class="btn btn-success unload-btn perm-driver" data-id="${item.id}">下货</button>
+          </div>`;
+          });
+          html += '</div>';
+        }
+        html += '</div></div>';
+      }
+    } else {
+      // 全部视图：按货架（通道位置）分组 → 货架号 → 卡板
+      const channelMap = new Map();
+      data.forEach(row => {
+        const ch = getChannel(row.shelf_code);
+        const sc = row.shelf_code || '未知';
+        if (!channelMap.has(ch)) channelMap.set(ch, new Map());
+        const shelfMap = channelMap.get(ch);
+        if (!shelfMap.has(sc)) shelfMap.set(sc, []);
+        shelfMap.get(sc).push(row);
+      });
+
+      const sortedChannels = [...channelMap.keys()].sort(sortChannels);
+      for (const ch of sortedChannels) {
+        const shelfMap = channelMap.get(ch);
+        let chCount = 0;
+        shelfMap.forEach(items => chCount += items.length);
+        html += `<div class="group-card compact" data-channel="${escHtml(ch)}">
+          <div class="group-title channel-title" onclick="const ct=this.nextElementSibling;ct.style.display=ct.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=ct.style.display==='none'?'▶':'▼'">货架 ${escHtml(ch)}（${chCount}个卡板）<span class="arrow">▶</span></div>
+          <div style="display:none">`;
+
+        const sortedShelves = [...shelfMap.keys()].sort();
+        for (const sc of sortedShelves) {
+          const items = shelfMap.get(sc);
+          const scDisplay = escHtml(sc).replace(/(\d{2})$/, '<span style="color:#FF3B30">$1</span>');
+          html += `<div class="shelf-group" data-shelf="${escHtml(sc)}">`;
+          html += `<div style="margin:8px 0 4px 8px;padding:4px 8px;background:rgba(255,149,0,0.08);border-left:3px solid #FF9500;border-radius:4px;font-size:15.5px;color:var(--ios-text);font-weight:700">货架号：${scDisplay}</div>`;
+          items.forEach(item => {
+            html += `
+          <div class="task-item" style="margin-left:8px">
+            <div class="task-info">
+              <div class="task-name">卡板 ${escHtml(String(item.pallet_code || '-').slice(-4))} | 现货：${esc(item.spot_qty)}</div>
+              <div class="task-detail">${esc(item.goods_name)} (${esc(item.goods_code)})</div>
+            </div>
+            <button class="btn btn-success unload-btn perm-driver" data-id="${item.id}">下货</button>
+          </div>`;
+          });
+          html += '</div>';
+        }
+        html += '</div></div>';
+      }
+    }
+
+    container.innerHTML = html;
+  }
+
+  // 司机下货/恢复按钮事件委托（仅绑定一次）
+  (function setupDriverDelegation() {
+    const container = document.getElementById('driverContainer');
+    if (!container) return;
+
+    container.addEventListener('click', async (e) => {
+      const unloadBtn = e.target.closest('.unload-btn');
+      if (unloadBtn) {
+        if (!hasPermission('driver')) { showToast('无操作权限'); return; }
+        const id = unloadBtn.dataset.id;
+        unloadBtn.disabled = true;
+        unloadBtn.textContent = '处理中...';
+        try {
+          notifyLocalAction(id);
+          const { error } = await supabase.from('replenish_demand').update({ status: 'unloaded', unloaded_at: new Date().toISOString() }).eq('id', id).eq('store_no', getCurrentUser().store_no);
+          if (error) {
+            showToast('操作失败：' + error.message);
+          } else {
+            // 从待下货移到已下货
+            const unloaded = allDriverData.find(r => String(r.id) === String(id));
+            allDriverData = allDriverData.filter(r => String(r.id) !== String(id));
+            if (unloaded) {
+              unloaded.status = 'unloaded';
+              allUnloadedData.push(unloaded);
+            }
+            // 移除卡板行
+            const taskItem = unloadBtn.closest('.task-item');
+            const groupCard = unloadBtn.closest('.group-card');
+            const shelfGroup = unloadBtn.closest('.shelf-group');
+            if (taskItem) taskItem.remove();
+            // 路线视图：移除空的货架分组
+            if (shelfGroup && shelfGroup.querySelectorAll('.task-item').length === 0) {
+              shelfGroup.remove();
+            }
+            // 移除空的通道/货架卡片，或更新标题
+            if (groupCard) {
+              const remaining = groupCard.querySelectorAll('.task-item').length;
+              if (remaining === 0) {
+                groupCard.remove();
+              } else {
+                const titleEl = groupCard.querySelector('.group-title');
+                const arrowEl = titleEl.querySelector('.arrow');
+                const arrowText = arrowEl ? arrowEl.textContent : '▶';
+                if (groupCard.dataset.channel) {
+                  const isRouteView = currentDriverZone.indexOf('custom-route-') === 0;
+                  const label = isRouteView ? '通道' : '货架';
+                  titleEl.innerHTML = `${label} ${escHtml(groupCard.dataset.channel)}（${remaining}个卡板）<span class="arrow">${arrowText}</span>`;
+                } else if (groupCard.dataset.shelf) {
+                  const scDisplay = escHtml(groupCard.dataset.shelf).replace(/(\d{2})$/, '<span style="color:#FF3B30">$1</span>');
+                  titleEl.innerHTML = `货架号：${scDisplay}（${remaining}个卡板）<span class="arrow">${arrowText}</span>`;
+                }
+              }
+            }
+            renderDriverDeptNav();
+          }
+        } catch (e) {
+          showToast('操作失败：' + e.message);
+        } finally {
+          unloadBtn.disabled = false;
+          unloadBtn.textContent = '下货';
+        }
+        return;
+      }
+
+      const restoreBtn = e.target.closest('.restore-btn');
+      if (restoreBtn) {
+        if (!hasPermission('driver')) { showToast('无操作权限'); return; }
+        const id = restoreBtn.dataset.id;
+        restoreBtn.disabled = true;
+        restoreBtn.textContent = '恢复中...';
+        try {
+          notifyLocalAction(id);
+          const { error } = await supabase.from('replenish_demand').update({ status: 'pending' }).eq('id', id).eq('store_no', getCurrentUser().store_no);
+          if (error) {
+            showToast('恢复失败：' + error.message);
+          } else {
+            // 从已下货数据中移除
+            const restored = allUnloadedData.find(r => String(r.id) === String(id));
+            allUnloadedData = allUnloadedData.filter(r => String(r.id) !== String(id));
+            if (restored) { restored.status = 'pending'; delete restored.unloaded_at; allDriverData.push(restored); }
+
+            // 移除卡板行
+            const taskItem = restoreBtn.closest('.task-item');
+            const shelfGroup = restoreBtn.closest('.shelf-group');
+            const groupCard = restoreBtn.closest('.group-card');
+            if (taskItem) taskItem.remove();
+            // 更新货架号标签
+            if (shelfGroup) {
+              const remaining = shelfGroup.querySelectorAll('.task-item').length;
+              if (remaining === 0) {
+                shelfGroup.remove();
+              } else {
+                const shelfCode = shelfGroup.dataset.shelf || '';
+                const sd = escHtml(shelfCode).replace(/(\d{2})$/, '<span style="color:#FF3B30">$1</span>');
+                const label = shelfGroup.querySelector('.shelf-label');
+                if (label) label.innerHTML = `货架号：${sd}（${remaining}个卡板）`;
+              }
+            }
+            // 更新货架标题
+            if (groupCard) {
+              const totalRemaining = groupCard.querySelectorAll('.task-item').length;
+              if (totalRemaining === 0) {
+                groupCard.remove();
+              } else {
+                const titleEl = groupCard.querySelector('.group-title');
+                const arrowEl = titleEl.querySelector('.arrow');
+                const arrowText = arrowEl ? arrowEl.textContent : '▶';
+                const shelfName = groupCard.dataset.shelf || '';
+                titleEl.innerHTML = `货架 ${escHtml(shelfName)}（${totalRemaining}个卡板）<span class="arrow">${arrowText}</span>`;
+              }
+            }
+            renderDriverDeptNav();
+            showToast('已恢复');
+          }
+        } catch (e) {
+          showToast('恢复失败：' + e.message);
+        } finally {
+          restoreBtn.disabled = false;
+          restoreBtn.textContent = '恢复';
+        }
+      }
+    });
+  })();
+
+  let cleanTimer = null;
+
+  /**
+   * 定时清空本店已下货记录（每天北京时间 09:00 触发）
+   * 使用 setTimeout 递归预约下一次执行
+   */
+  function scheduleDailyClean() {
+    clearTimeout(cleanTimer);
+    const now = new Date();
+    // 北京时间 09:00 = UTC 01:00
+    const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 1, 0, 0));
+    if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+    const delay = next - now;
+    cleanTimer = setTimeout(async () => {
+      try {
+        const user = getCurrentUser();
+        if (!user) { scheduleDailyClean(); return; }
+        const { error } = await supabase.from('replenish_demand')
+          .delete()
+          .eq('status', 'unloaded')
+          .eq('store_no', user.store_no);
+        if (!error) {
+          allUnloadedData = [];
+          if (currentPageName === 'driver' && currentDriverZone === '已下货') renderUnloadedList();
+          else if (currentPageName === 'driver') renderDriverDeptNav();
+          console.log('已下货定时清空完成:', new Date().toLocaleString());
+        }
+      } catch (e) {}
+      scheduleDailyClean(); // 预约明天
+    }, delay);
+  }
+
+  /**
+   * 加载司机下货页：并行拉取本店 pending + unloaded + 路线数据
+   * 写入 allDriverData / allUnloadedData / shelfRouteMap / shelfChannelMap 后触发渲染
+   */
+  async function loadDriverView() {
+    const user = getCurrentUser();
+    const container = document.getElementById('driverContainer');
+    container.innerHTML = '<div class="loading-text">加载中</div>';
+
+    // 加载本店自定义路线（Supabase，跨设备同步）
+    await loadCustomRoutes();
+
+    // 同时加载待下货、已下货和路线数据
+    const [pendingRes, unloadedRes, routesRes] = await Promise.all([
+      supabase.from('replenish_demand').select('*').eq('store_no', user.store_no).eq('status', 'pending').order('shelf_code'),
+      supabase.from('replenish_demand').select('*').eq('store_no', user.store_no).eq('status', 'unloaded').order('shelf_code'),
+      supabase.from('shelf_routes').select('*').eq('store_no', user.store_no)
+    ]);
+
+    if (pendingRes.error) {
+      container.innerHTML = '<div class="empty">加载失败：' + pendingRes.error.message + '</div>';
+      return;
+    }
+
+    allDriverData = pendingRes.data || [];
+    allUnloadedData = unloadedRes.data || [];
+
+    // 构建 shelf_code → route_order、channel_position、left/right 映射
+    shelfRouteMap = {};
+    shelfChannelMap = {};
+    shelfSideMap = {};
+    allShelfRoutes = routesRes.data || [];
+    allShelfRoutes.forEach(r => {
+      if (r.left_shelf_code) {
+        shelfRouteMap[r.left_shelf_code] = r.route_order;
+        shelfChannelMap[r.left_shelf_code] = r.channel_position;
+        shelfSideMap[r.left_shelf_code] = 'left';
+      }
+      if (r.right_shelf_code) {
+        shelfRouteMap[r.right_shelf_code] = r.route_order;
+        shelfChannelMap[r.right_shelf_code] = r.channel_position;
+        shelfSideMap[r.right_shelf_code] = 'right';
+      }
+    });
+
+    if (currentDriverZone === '已下货') {
+      renderUnloadedList();
+    } else {
+      renderDriverList();
+    }
+  }
+
+  /** 渲染已下货列表（按货架 → 卡板号分组，并提供"清空已下货"按钮） */
+  function renderUnloadedList() {
+    renderDriverDeptNav();
+    const container = document.getElementById('driverContainer');
+
+    if (allUnloadedData.length === 0) {
+      container.innerHTML = '<div class="empty">暂无已下货记录</div>';
+      return;
+    }
+
+    let unloadedHtml = `<div style="text-align:right;margin-bottom:8px"><button class="btn btn-danger btn-sm perm-driver" id="clearUnloadedBtn">清空已下货</button></div>`;
+
+    let data = allUnloadedData;
+    // 二级分组：货架 → 货架号
+    const shelfMap = new Map();  // 货架 → Map(货架号 → 卡板数组)
+    data.forEach(row => {
+      const shelf = getChannel(row.shelf_code);
+      const sc = row.shelf_code || '未知';
+      if (!shelfMap.has(shelf)) shelfMap.set(shelf, new Map());
+      const inner = shelfMap.get(shelf);
+      if (!inner.has(sc)) inner.set(sc, []);
+      inner.get(sc).push(row);
+    });
+
+    const sortedShelves = [...shelfMap.keys()].sort();
+    for (const shelf of sortedShelves) {
+      const innerMap = shelfMap.get(shelf);
+      const totalCount = [...innerMap.values()].reduce((s, a) => s + a.length, 0);
+      unloadedHtml += `<div class="group-card compact" data-shelf="${escHtml(shelf)}">
+        <div class="group-title channel-title" onclick="const ct=this.nextElementSibling;ct.style.display=ct.style.display==='none'?'block':'none';this.querySelector('.arrow').textContent=ct.style.display==='none'?'▶':'▼'">货架 ${escHtml(shelf)}（${totalCount}个卡板）<span class="arrow">▶</span></div>
+        <div style="display:none">`;
+      const sortedCodes = [...innerMap.keys()].sort();
+      for (const sc of sortedCodes) {
+        const items = innerMap.get(sc);
+        const scDisplay = escHtml(sc).replace(/(\d{2})$/, '<span style="color:#FF3B30">$1</span>');
+        unloadedHtml += `<div class="shelf-group" data-shelf="${escHtml(sc)}">
+          <div class="shelf-label">货架号：${scDisplay}（${items.length}个卡板）</div>`;
+        items.forEach(item => {
+          unloadedHtml += `
+          <div class="task-item">
+            <div class="task-info">
+              <div class="task-name">卡板 ${escHtml(String(item.pallet_code || '-').slice(-4))} | 现货：${esc(item.spot_qty)}</div>
+              <div class="task-detail">${esc(item.goods_name)} (${esc(item.goods_code)})</div>
+            </div>
+            <button class="btn btn-primary restore-btn perm-driver" data-id="${item.id}">恢复</button>
+          </div>`;
+        });
+        unloadedHtml += '</div>';
+      }
+      unloadedHtml += '</div></div>';
+    }
+
+    container.innerHTML = unloadedHtml;
+
+    // 清空已下货按钮
+    document.getElementById('clearUnloadedBtn').addEventListener('click', async () => {
+      if (!hasPermission('driver')) { showToast('无操作权限'); return; }
+      const ok = await showModal('确认清空', '确定要清空所有已下货记录吗？此操作不可恢复。');
+      if (!ok) return;
+      const btn = document.getElementById('clearUnloadedBtn');
+      btn.disabled = true;
+      btn.textContent = '清空中...';
+      try {
+        // 批量删除按 store_no+status，无法预知每个被删 id；先收集当前已下货 id 用于回声去重
+        notifyLocalAction(allUnloadedData.map(r => r.id));
+        const { error } = await supabase.from('replenish_demand').delete().eq('store_no', getCurrentUser().store_no).eq('status', 'unloaded');
+        if (error) {
+          showToast('清空失败：' + error.message);
+        } else {
+          allUnloadedData = [];
+          renderUnloadedList();
+          showToast('已清空所有已下货记录');
+        }
+      } catch (e) {
+        showToast('清空失败：' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '清空已下货';
+      }
+    });
+  }
+
+  // ==========================================
+  // 页面4：上传库位
+  // ==========================================
+  const uploadArea = document.getElementById('uploadArea');
+  const excelFile = document.getElementById('excelFile');
+  const uploadResult = document.getElementById('uploadResult');
+  const uploadProgress = document.getElementById('uploadProgress');
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  const uploadFileName = document.getElementById('uploadFileName');
+
+  uploadArea.addEventListener('click', () => excelFile.click());
+
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('drag-over');
+  });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    if (e.dataTransfer.files.length > 0) handleFileUpload(e.dataTransfer.files[0]);
+  });
+
+  excelFile.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) handleFileUpload(e.target.files[0]);
+  });
+
+  document.addEventListener('paste', async (e) => {
+    if (!hasPermission('storage')) return;
+    if (!document.getElementById('page-storage').classList.contains('active')) return;
+    const items = e.clipboardData?.items;
+    if (!items || items.length === 0) return;
+    for (const item of items) {
+      if (item.type.includes('spreadsheetml.sheet') || item.type.includes('ms-excel') || item.type === 'application/octet-stream') {
+        const file = item.getAsFile();
+        if (file) { e.preventDefault(); handleFileUpload(file); return; }
+      }
+    }
+  });
+
+  /**
+   * 处理库位数据 Excel 上传：解析 → 强制 store_no → 批量插入新数据 → 删除旧数据
+   * 采用 insert-then-delete 模式保证原子性，失败回滚显示错误
+   * @param {File} file Excel 文件（.xlsx/.xls）
+   */
+  async function handleFileUpload(file) {
+    if (!hasPermission('storage')) { showToast('仅管理员可上传数据'); return; }
+    if (!file.name.match(/\.(xlsx|xls)$/)) {
+      showUploadResult('error', '请选择Excel文件（.xlsx或.xls格式）');
+      return;
+    }
+    if (!checkOnlineOrToast()) return;
+
+    uploadFileName.textContent = file.name;
+    document.getElementById('uploadPrompt').style.display = 'none';
+    showUploadResult('loading', '正在解析文件...');
+    uploadProgress.style.display = 'block';
+    updateProgress(10, '读取文件中...');
+
+    try {
+      const buffer = await file.arrayBuffer();
+      updateProgress(20, '解析数据中...');
+      const workbook = XLSX.read(buffer, { type: 'array' });
+
+      const firstSheet = workbook.SheetNames[0];
+      if (!firstSheet) { showUploadResult('error', 'Excel无工作表'); return; }
+
+      const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+      if (!sheetData || sheetData.length === 0) { showUploadResult('error', '未读取到数据'); return; }
+
+      updateProgress(30, '已解析 ' + sheetData.length + ' 条，准备上传...');
+
+      const currentStoreNo = getCurrentUser().store_no;
+      const allRecords = sheetData.map(row => ({
+        store_no: currentStoreNo,
+        category: String(row['品类'] || row['category'] || ''),
+        goods_code: String(row['商品号'] || row['goods_code'] || ''),
+        location_code: String(row['库位'] || row['location_code'] || ''),
+        inventory_attr: String(row['库存属性'] || row['inventory_attr'] || ''),
+        pallet_code: String(row['卡板'] || row['pallet_code'] || '').trim(),
+        goods_name: String(row['商品名称'] || row['goods_name'] || ''),
+        spec: String(row['规格'] || row['spec'] || ''),
+        spot_qty: (v => { const n = parseInt(v); return isNaN(n) ? 0 : Math.max(0, n); })(row['现货数量'] || row['spot_qty'] || 0),
+        shelf_code: String(row['货架号'] || row['shelf_code'] || ''),
+        storage_area: String(row['储区'] || row['storage_area'] || ''),
+        allocated_qty: (v => { const n = parseInt(v); return isNaN(n) ? 0 : Math.max(0, n); })(row['分配数量'] || row['allocated_qty'] || 0),
+        available_qty: (v => { const n = parseInt(v); return isNaN(n) ? 0 : Math.max(0, n); })(row['可用数量'] || row['available_qty'] || 0)
+      }));
+
+      // 剔除卡板为空的行
+      const records = allRecords.filter(r => r.pallet_code !== '');
+      const skipped = allRecords.length - records.length;
+
+      if (records.length === 0) {
+        showUploadResult('error', '文件中无有效数据（卡板为空的行已剔除 ' + skipped + ' 条）');
+        uploadProgress.style.display = 'none';
+        return;
+      }
+
+      updateProgress(35, '备份旧数据ID中...');
+
+      // 先获取本店旧数据ID，用于插入成功后清理
+      const { data: oldRows } = await supabase.from('storage_location')
+        .select('id')
+        .eq('store_no', currentStoreNo);
+      const oldIds = oldRows ? oldRows.map(r => r.id) : [];
+
+      updateProgress(40, '上传新数据中...（已剔除 ' + skipped + ' 条无卡板记录）');
+
+      // 先上传新数据，成功后再删除旧数据，避免中途失败导致数据丢失
+      const batchSize = 500;
+      let insertedCount = 0;
+      const insertedIds = [];
+
+      for (let i = 0; i < records.length; i += batchSize) {
+        const batch = records.slice(i, i + batchSize);
+        const { data: insData, error: insErr } = await supabase.from('storage_location').insert(batch).select('id');
+
+        if (insErr) {
+          // 插入失败，回滚已插入的数据
+          if (insertedIds.length > 0) {
+            await supabase.from('storage_location').delete().in('id', insertedIds.flat());
+          }
+          showUploadResult('error', '上传失败（第' + (Math.floor(i / batchSize) + 1) + '批）：' + insErr.message);
+          uploadProgress.style.display = 'none';
+          return;
+        }
+
+        if (insData) insertedIds.push(insData.map(r => r.id));
+        insertedCount += batch.length;
+        updateProgress(40 + Math.round((insertedCount / records.length) * 40), '已上传 ' + insertedCount + ' / ' + records.length);
+      }
+
+      // 新数据全部插入成功后，删除旧数据
+      updateProgress(85, '清理旧数据中...');
+      const newIdSet = new Set(insertedIds.flat());
+      const idsToDelete = oldIds.filter(id => !newIdSet.has(id));
+      let delFailed = false;
+      for (let j = 0; j < idsToDelete.length; j += batchSize) {
+        const delBatch = idsToDelete.slice(j, j + batchSize);
+        const { error: delErr } = await supabase.from('storage_location').delete().in('id', delBatch).eq('store_no', currentStoreNo);
+        if (delErr) { delFailed = true; break; }
+      }
+      if (delFailed) {
+        showUploadResult('error', '新数据已上传，但旧数据清理失败，请重新上传一次以覆盖旧数据');
+        uploadProgress.style.display = 'none';
+        return;
+      }
+
+      updateProgress(100, '上传完成！');
+      uploadProgress.style.display = 'none';
+      showUploadResult('success', '上传成功！共 ' + records.length + ' 条记录已存入数据库');
+
+    } catch (err) {
+      console.error(err);
+      showUploadResult('error', '文件处理失败：' + err.message);
+      uploadProgress.style.display = 'none';
+    }
+  }
+
+  function updateProgress(pct, text) {
+    progressBar.style.width = pct + '%';
+    progressText.textContent = text;
+  }
+
+  function showUploadResult(type, message) {
+    uploadResult.style.display = 'block';
+    uploadResult.textContent = message;
+    uploadResult.style.cssText = '';
+    if (type === 'success') {
+      uploadResult.style.cssText = 'background:rgba(52,199,89,0.08);color:#34C759;border:0.5px solid rgba(52,199,89,0.25);display:block;margin-top:12px;padding:10px;border-radius:10px;font-size:14px';
+      setTimeout(() => { uploadResult.style.display = 'none'; }, 8000);
+    } else if (type === 'error') {
+      uploadResult.style.cssText = 'background:rgba(255,59,48,0.08);color:#FF3B30;border:0.5px solid rgba(255,59,48,0.25);display:block;margin-top:12px;padding:10px;border-radius:10px;font-size:14px';
+    } else {
+      uploadResult.style.cssText = 'background:rgba(0,122,255,0.06);color:#007AFF;border:0.5px solid rgba(0,122,255,0.25);display:block;margin-top:12px;padding:10px;border-radius:10px;font-size:14px';
+    }
+  }
+
+  // ==========================================
+  // 页面4-B：上传叉货路线
+  // ==========================================
+  const routeUploadArea = document.getElementById('routeUploadArea');
+  const routeExcelFile = document.getElementById('routeExcelFile');
+  const routeUploadResult = document.getElementById('routeUploadResult');
+  const routeUploadProgress = document.getElementById('routeUploadProgress');
+  const routeProgressBar = document.getElementById('routeProgressBar');
+  const routeProgressText = document.getElementById('routeProgressText');
+  const routeUploadFileName = document.getElementById('routeUploadFileName');
+
+  routeUploadArea.addEventListener('click', () => routeExcelFile.click());
+
+  routeUploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    routeUploadArea.classList.add('drag-over');
+  });
+  routeUploadArea.addEventListener('dragleave', () => routeUploadArea.classList.remove('drag-over'));
+  routeUploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    routeUploadArea.classList.remove('drag-over');
+    if (e.dataTransfer.files.length > 0) handleRouteFileUpload(e.dataTransfer.files[0]);
+  });
+
+  routeExcelFile.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) handleRouteFileUpload(e.target.files[0]);
+  });
+
+  function routeUpdateProgress(pct, text) {
+    routeProgressBar.style.width = pct + '%';
+    routeProgressText.textContent = text;
+  }
+
+  function showRouteUploadResult(type, message) {
+    routeUploadResult.style.display = 'block';
+    routeUploadResult.textContent = message;
+    routeUploadResult.style.cssText = '';
+    if (type === 'success') {
+      routeUploadResult.style.cssText = 'background:rgba(52,199,89,0.08);color:#34C759;border:0.5px solid rgba(52,199,89,0.25);display:block;margin-top:12px;padding:10px;border-radius:10px;font-size:14px';
+      setTimeout(() => { routeUploadResult.style.display = 'none'; }, 8000);
+    } else if (type === 'error') {
+      routeUploadResult.style.cssText = 'background:rgba(255,59,48,0.08);color:#FF3B30;border:0.5px solid rgba(255,59,48,0.25);display:block;margin-top:12px;padding:10px;border-radius:10px;font-size:14px';
+    } else {
+      routeUploadResult.style.cssText = 'background:rgba(0,122,255,0.06);color:#007AFF;border:0.5px solid rgba(0,122,255,0.25);display:block;margin-top:12px;padding:10px;border-radius:10px;font-size:14px';
+    }
+  }
+
+  /**
+   * 处理叉货路线 Excel 上传：解析 → 强制 store_no → 全量替换 shelf_routes 表
+   * @param {File} file Excel 文件（.xlsx/.xls）
+   */
+  async function handleRouteFileUpload(file) {
+    if (!hasPermission('storage')) { showToast('仅管理员可上传数据'); return; }
+    if (!file.name.match(/\.(xlsx|xls)$/)) {
+      showRouteUploadResult('error', '请选择Excel文件（.xlsx或.xls格式）');
+      return;
+    }
+    if (!checkOnlineOrToast()) return;
+
+    routeUploadFileName.textContent = file.name;
+    document.getElementById('routeUploadPrompt').style.display = 'none';
+    showRouteUploadResult('loading', '正在解析文件...');
+    routeUploadProgress.style.display = 'block';
+    routeUpdateProgress(10, '读取文件中...');
+
+    try {
+      const buffer = await file.arrayBuffer();
+      routeUpdateProgress(20, '解析数据中...');
+      const workbook = XLSX.read(buffer, { type: 'array' });
+
+      const firstSheet = workbook.SheetNames[0];
+      if (!firstSheet) { showRouteUploadResult('error', 'Excel无工作表'); return; }
+
+      const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+      if (!sheetData || sheetData.length === 0) { showRouteUploadResult('error', '未读取到数据'); return; }
+
+      routeUpdateProgress(30, '已解析 ' + sheetData.length + ' 条，准备上传...');
+
+      const currentStoreNo = getCurrentUser().store_no;
+      const records = sheetData.map(row => ({
+        store_no: currentStoreNo,
+        area: String(row['区域'] || row['area'] || ''),
+        channel_position: String(row['通道位置'] || row['channel_position'] || ''),
+        left_shelf_code: String(row['左侧货架号'] || row['left_shelf_code'] || ''),
+        right_shelf_code: String(row['右侧货架号'] || row['right_shelf_code'] || ''),
+        route_order: (v => { const n = parseInt(v); return isNaN(n) ? 0 : n; })(row['路线顺序号'] || row['route_order'] || 0)
+      }));
+
+      routeUpdateProgress(35, '备份旧数据ID中...');
+
+      // 先获取本店旧数据ID，用于插入成功后清理
+      const { data: oldRouteRows } = await supabase.from('shelf_routes')
+        .select('id')
+        .eq('store_no', currentStoreNo);
+      const oldRouteIds = oldRouteRows ? oldRouteRows.map(r => r.id) : [];
+
+      routeUpdateProgress(40, '上传新数据中...');
+
+      // 先上传新数据，成功后再删除旧数据
+      const batchSize = 500;
+      let insertedCount = 0;
+      const insertedIds = [];
+
+      for (let i = 0; i < records.length; i += batchSize) {
+        const batch = records.slice(i, i + batchSize);
+        const { data: insData, error: insErr } = await supabase.from('shelf_routes').insert(batch).select('id');
+
+        if (insErr) {
+          if (insertedIds.length > 0) {
+            await supabase.from('shelf_routes').delete().in('id', insertedIds.flat());
+          }
+          showRouteUploadResult('error', '上传失败（第' + (Math.floor(i / batchSize) + 1) + '批）：' + insErr.message);
+          routeUploadProgress.style.display = 'none';
+          return;
+        }
+
+        if (insData) insertedIds.push(insData.map(r => r.id));
+        insertedCount += batch.length;
+        routeUpdateProgress(40 + Math.round((insertedCount / records.length) * 40), '已上传 ' + insertedCount + ' / ' + records.length);
+      }
+
+      // 新数据全部插入成功后，删除旧数据
+      routeUpdateProgress(85, '清理旧数据中...');
+      const newRouteIdSet = new Set(insertedIds.flat());
+      const routeIdsToDelete = oldRouteIds.filter(id => !newRouteIdSet.has(id));
+      let routeDelFailed = false;
+      for (let j = 0; j < routeIdsToDelete.length; j += batchSize) {
+        const delBatch = routeIdsToDelete.slice(j, j + batchSize);
+        const { error: delErr } = await supabase.from('shelf_routes').delete().in('id', delBatch).eq('store_no', currentStoreNo);
+        if (delErr) { routeDelFailed = true; break; }
+      }
+      if (routeDelFailed) {
+        showRouteUploadResult('error', '新数据已上传，但旧数据清理失败，请重新上传一次以覆盖旧数据');
+        routeUploadProgress.style.display = 'none';
+        return;
+      }
+
+      routeUpdateProgress(100, '上传完成！');
+      routeUploadProgress.style.display = 'none';
+      showRouteUploadResult('success', '上传成功！共 ' + records.length + ' 条叉货路线已存入数据库');
+
+    } catch (err) {
+      console.error(err);
+      showRouteUploadResult('error', '文件处理失败：' + err.message);
+      routeUploadProgress.style.display = 'none';
+    }
+  }
+
+  // ==========================================
+  // 辅助函数
+  // ==========================================
+  /**
+   * HTML 转义，防止 XSS（转义 & < > " '）
+   * @param {*} s 任意输入值
+   * @returns {string}
+   */
+  function escHtml(s) {
+    return s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  /**
+   * escHtml 简写：null/undefined 时使用 fallback
+   * @param {*} s 输入值
+   * @param {string} [fallback='-'] 空值回退文本
+   * @returns {string}
+   */
+  function esc(s, fallback = '-') {
+    return escHtml(s ?? fallback);
+  }
+
+  /**
+   * 切换页面：处理页面权限校验、Tab 状态、Header 显示、localStorage 记忆
+   * @param {'login'|'create'|'list'|'driver'|'storage'} pageName 目标页面
+   */
+  function switchToPage(pageName) {
+    // 页面级权限校验：未登录只能访问登录页
+    const user = getCurrentUser();
+    if (pageName !== 'login' && !user) {
+      showToast('请先登录');
+      pageName = 'login';
+    }
+    // 数据上传页仅管理员可访问
+    if (pageName === 'storage' && user && user.role !== '管理员') {
+      showToast('仅管理员可访问数据上传');
+      pageName = 'login';
+    }
+    currentPageName = pageName;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const targetTab = document.querySelector('.tab[data-page="' + pageName + '"]');
+    if (targetTab) targetTab.classList.add('active');
+    const targetPage = document.getElementById('page-' + pageName);
+    if (targetPage) targetPage.classList.add('active');
+    pageTitleEl.textContent = pageTitles[pageName] || '';
+    headerBackBtn.style.display = (pageName === 'list') ? 'block' : 'none';
+    // 非登录页显示店号：姓名（加大加亮）
+    const userNameEl = document.getElementById('headerUserName');
+    if (pageName !== 'login' && user) {
+      userNameEl.textContent = user.store_no + '：' + user.name;
+      userNameEl.style.display = 'block';
+    } else if (pageName === 'login') {
+      userNameEl.style.display = 'none';
+    }
+    localStorage.setItem('currentPage', pageName);
+    // 更新页面权限
+    if (pageName === 'login') {
+      checkLoginStatus();
+    } else {
+      updatePagePermissions();
+    }
+  }
+
+  // 清理旧版 localStorage 自定义路线数据（已迁移到 Supabase）
+  try { localStorage.removeItem('customRoutes'); } catch (e) {}
+
+  // 页面卸载时释放实时通道
+  window.addEventListener('beforeunload', () => {
+    pageUnloading = true;
+    clearTimeout(realtimeRetryTimer);
+    clearTimeout(cleanTimer);
+    clearTimeout(customRouteReloadTimer);
+    if (realtimeChannel) {
+      try { supabase.removeChannel(realtimeChannel); } catch (e) {}
+    }
+  });
+
+  // 页面恢复可见时检查 Realtime 连接
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !realtimeSubscribed) {
+      initRealtime();
+    }
+  });
+
+  // 页面初始化
+  checkLoginStatus();
+  // 登录成功后停留在登录页，刷新时恢复上次浏览页面
+  const savedPage = localStorage.getItem('currentPage');
+  if (savedPage && savedPage !== 'login' && getCurrentUser()) {
+    switchToPage(savedPage);
+    if (savedPage === 'list') loadDemandList();
+    else if (savedPage === 'driver') loadDriverView();
+  } else if (getCurrentUser()) {
+    switchToPage('login');
+  }
+  initRealtime();
+  scheduleDailyClean();
+</script>
+
+</body>
+</html>
